@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AngBrace</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0f1b2d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#eef1f5;--surface:#ffffff;--surface2:#e5e9ef;--ink:#0f1b2d;--muted:#5a6578;--line:#d4dae3;
+  --brand:#0f1b2d;--brand-ink:#ffffff;
+  --L:#2771d6;--R:#e2582f;--L-soft:rgba(39,113,214,.13);--R-soft:rgba(226,88,47,.13);
+  --ok:#0d9763;--warn:#bf7a00;--bad:#d23a3a;--ok-soft:rgba(13,151,99,.13);--warn-soft:rgba(191,122,0,.14);--bad-soft:rgba(210,58,58,.12);
+  --shadow:0 1px 2px rgba(15,27,45,.05),0 6px 18px rgba(15,27,45,.06);
+  --sans:"IBM Plex Sans KR","Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --num:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1019;--surface:#121a26;--surface2:#1b2432;--ink:#e6ecf4;--muted:#8f9cb0;--line:#243041;
+  --brand:#dbe6f7;--brand-ink:#0a1019;
+  --L:#5b9dff;--R:#ff7d58;--L-soft:rgba(91,157,255,.16);--R-soft:rgba(255,125,88,.16);
+  --ok:#2fcf8c;--warn:#f1b03a;--bad:#ff6b6b;--ok-soft:rgba(47,207,140,.14);--warn-soft:rgba(241,176,58,.15);--bad-soft:rgba(255,107,107,.15);
+  --shadow:none;color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0a1019;--surface:#121a26;--surface2:#1b2432;--ink:#e6ecf4;--muted:#8f9cb0;--line:#243041;
+  --brand:#dbe6f7;--brand-ink:#0a1019;
+  --L:#5b9dff;--R:#ff7d58;--L-soft:rgba(91,157,255,.16);--R-soft:rgba(255,125,88,.16);
+  --ok:#2fcf8c;--warn:#f1b03a;--bad:#ff6b6b;--ok-soft:rgba(47,207,140,.14);--warn-soft:rgba(241,176,58,.15);--bad-soft:rgba(255,107,107,.15);
+  --shadow:none;color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--L);outline-offset:2px}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+
+/* 상단 */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);display:flex;align-items:center;gap:10px;padding:12px 16px 8px;max-width:600px;margin:0 auto}
+.wordmark{display:flex;align-items:center;gap:8px;font-weight:700;font-size:19px;letter-spacing:-.02em;margin-right:auto}
+.wordmark svg{width:26px;height:26px}
+.devpill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:13px;font-weight:600}
+.led{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.led.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.led.sim{background:var(--L)}
+.led.warn{background:var(--warn)}
+
+/* 본문 */
+.app{max-width:600px;margin:0 auto;padding:4px 16px calc(92px + env(safe-area-inset-bottom,0px))}
+.scr{display:none;flex-direction:column;gap:14px}
+.scr.active{display:flex}
+h1{font-size:24px;line-height:1.25;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:15px;margin:0;letter-spacing:-.01em}
+.eyebrow{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.xs{font-size:12px}
+.card{background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;min-width:0}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:9px 14px;font-weight:600;font-size:14px}
+.btn.sm{padding:6px 10px;font-size:13px;border-radius:10px}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.cta{width:100%;border:0;border-radius:18px;padding:18px;background:var(--brand);color:var(--brand-ink);font-size:18px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cta small{font-size:13px;font-weight:500;opacity:.75}
+.cta.stop{background:var(--bad);color:#fff}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.L{background:var(--L-soft);color:var(--L)}
+.pill.R{background:var(--R-soft);color:var(--R)}
+.stat .v{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.stat .v small{font-size:14px;color:var(--muted);font-weight:500;margin-left:2px}
+.banner{border-radius:14px;padding:12px 14px;background:var(--warn-soft);color:var(--ink);font-size:14px;display:flex;gap:10px;align-items:center}
+input[type=text],input[type=number],input[type=time],select{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+input[type=number]{width:80px}
+input[type=range]{width:100%;accent-color:var(--brand)}
+.seg{display:inline-flex;background:var(--surface2);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+.switch input{width:20px;height:20px;accent-color:var(--brand)}
+.divider{height:1px;background:var(--line);margin:2px 0}
+canvas{display:block;width:100%}
+
+/* 측정 */
+.exbar{flex-direction:row;align-items:center;gap:12px}
+.exbar .name{font-weight:700;font-size:17px}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gauge{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 10px 14px;box-shadow:var(--shadow);text-align:center;position:relative}
+.gauge .side{position:absolute;top:10px;left:12px;font-weight:700;font-size:13px}
+.gauge.L .side{color:var(--L)}
+.gauge.R .side{color:var(--R)}
+.gauge svg{width:100%;display:block}
+.gauge .ang{font-family:var(--num);font-size:40px;font-weight:600;line-height:1;margin-top:-6px;letter-spacing:-.03em}
+.gauge .ang small{font-size:18px;color:var(--muted)}
+.gauge .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.gauge.off .ang{color:var(--muted)}
+.devrow{display:flex;align-items:center;justify-content:center;gap:10px}
+.devbig{font-family:var(--num);font-weight:600;font-size:15px;padding:6px 14px;border-radius:99px}
+.alert{border-radius:14px;padding:12px 14px;background:var(--bad);color:#fff;font-weight:700;text-align:center;animation:pulse .6s ease-out}
+@keyframes pulse{from{transform:scale(.97);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.alert{animation:none}}
+.runstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.runstats .v{font-family:var(--num);font-size:30px;font-weight:600;line-height:1.1}
+.runstats .k{font-size:12px;color:var(--muted)}
+.reps{display:flex;flex-direction:column;gap:6px}
+.repline{display:grid;grid-template-columns:34px 1fr 1fr 64px;gap:8px;align-items:center;font-size:13px;padding:8px 10px;border-radius:12px;background:var(--surface2)}
+.repline .n{font-weight:700;color:var(--muted)}
+.repline .l{color:var(--L);font-family:var(--num)}
+.repline .r{color:var(--R);font-family:var(--num)}
+.tip{font-size:13px;color:var(--muted);background:var(--surface2);border-radius:12px;padding:10px 12px}
+.simdock{border:1px dashed var(--L);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--L-soft)}
+
+/* 라이브러리 */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600}
+.chip.active{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.exrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line)}
+.exrow:last-child{border-bottom:0}
+.exrow .t{font-weight:600}
+.star{border:0;background:none;font-size:20px;line-height:1;padding:4px 6px;color:var(--muted)}
+.star.on{color:var(--warn)}
+
+/* 기록 */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .dow{font-size:11px;color:var(--muted);font-weight:600;padding-bottom:2px}
+.cal button{border:0;background:none;border-radius:10px;padding:6px 0 8px;font-size:13px;font-family:var(--num);position:relative;min-height:40px}
+.cal button.today{box-shadow:inset 0 0 0 1.5px var(--brand)}
+.cal button.sel{background:var(--brand);color:var(--brand-ink)}
+.cal button.has::after{content:"";position:absolute;left:50%;bottom:5px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--ok)}
+.cal button.locked{opacity:.35}
+.cal button:disabled{visibility:hidden}
+.sess{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px;border-radius:14px;background:var(--surface2);text-align:left;border:0;width:100%}
+.sess .t{font-weight:700}
+.lrbar{display:grid;grid-template-columns:18px 1fr 44px;align-items:center;gap:6px;font-size:12px;grid-column:1/-1}
+.lrbar .track{height:8px;border-radius:5px;background:var(--surface);overflow:hidden}
+.lrbar .fill{height:100%;border-radius:5px}
+.lock{display:flex;gap:10px;align-items:center;padding:12px;border-radius:14px;border:1px dashed var(--line);font-size:13px;color:var(--muted)}
+.risk{display:flex;align-items:center;gap:12px}
+.risk .badge{font-size:15px;font-weight:700;padding:8px 14px;border-radius:12px}
+
+/* 하단 탭 */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+.tabbar .inner{display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:600px}
+.tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:600;color:var(--muted);position:relative}
+.tabbar button svg{width:24px;height:24px}
+.tabbar button.active{color:var(--ink)}
+.tabbar button .rec{position:absolute;top:4px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:var(--bad)}
+
+/* 시트 & 토스트 */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(5,10,18,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet-body{background:var(--bg);width:100%;max-width:600px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center}
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25);transition:opacity .2s;opacity:0;pointer-events:none}
+#toast.show{opacity:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12px}
+.tablewrap{overflow-x:auto}
+code{font-family:var(--num);font-size:12px;word-break:break-all}
+@media (max-width:380px){.gauge .ang{font-size:32px}.runstats .v{font-size:24px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wordmark">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 5v13" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M16 18 7 27" stroke="var(--L)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 18l9 9" stroke="var(--R)" stroke-width="3.2" stroke-linecap="round"/><circle cx="16" cy="18" r="3" fill="var(--bg)" stroke="currentColor" stroke-width="2"/></svg>
+    AngBrace
+  </div>
+  <button class="devpill" id="devPill"><span class="led" id="devLed"></span><span id="devText">보호대 연결</span></button>
+</header>
+
+<main class="app">
+
+<!-- ================= 홈 ================= -->
+<section class="scr active" id="scr-home">
+  <div>
+    <div class="eyebrow" id="homeDate"></div>
+    <h1 id="homeTitle">오늘도 좌우 균형 체크해요</h1>
+  </div>
+  <div class="banner" id="remindBanner" hidden>⏰ <span>오늘 아직 측정하지 않았어요. 1분이면 끝나요.</span></div>
+  <button class="cta" id="btnQuick">오늘의 측정 시작<small id="quickEx">스쿼트</small></button>
+  <div class="grid2">
+    <div class="card stat"><div class="eyebrow">연속 측정</div><div class="v num" id="streakV">0<small>일</small></div><div class="xs muted" id="streakNote">오늘 측정하면 시작돼요</div></div>
+    <div class="card stat"><div class="eyebrow">오늘</div><div class="v num" id="todayV">0<small>회</small></div><div class="xs muted" id="todayNote">세션 0 · 0분</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>최근 7일 반복 횟수</h2><span class="xs muted" id="weekSum"></span></div>
+    <canvas id="weekChart" height="130"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>최근 세션</h2><button class="btn sm ghost" data-go="history">전체 기록</button></div>
+    <div id="lastSess"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>즐겨찾기</h2><button class="btn sm ghost" data-go="library">종목 라이브러리</button></div>
+    <div class="chips" id="favChips"></div>
+  </div>
+</section>
+
+<!-- ================= 측정 ================= -->
+<section class="scr" id="scr-measure">
+  <div class="card exbar">
+    <div style="flex:1;min-width:0">
+      <div class="eyebrow" id="mCat">하체 · 무릎</div>
+      <div class="name" id="mName">스쿼트</div>
+      <div class="row small"><span class="pill ok" id="mTarget">굴곡 90–110°</span><span class="xs muted" id="mTargetSrc">일반 가이드</span></div>
+    </div>
+    <div class="row" style="flex-direction:column;align-items:stretch;gap:6px">
+      <button class="btn sm" id="btnChangeEx">종목 변경</button>
+      <button class="btn sm ghost" id="btnEditTarget">목표 수정</button>
+    </div>
+  </div>
+  <div class="card" id="targetEdit" hidden>
+    <h2>내 목표 각도</h2>
+    <div class="row" id="targetInputs"></div>
+    <div class="row"><button class="btn sm" id="btnTargetSave">저장</button><button class="btn sm ghost" id="btnTargetReset">가이드 값으로</button></div>
+  </div>
+  <div class="tip" id="mTip" hidden></div>
+  <div class="tip" id="mPersonal" hidden></div>
+
+  <div class="gauges">
+    <div class="gauge L" id="gaugeL"></div>
+    <div class="gauge R" id="gaugeR"></div>
+  </div>
+  <div class="devrow">
+    <span class="devbig pill" id="devBig">좌우 편차 --</span>
+    <span class="xs muted">경고 기준 <b id="thrLabel">5</b>°</span>
+  </div>
+  <div class="alert" id="alertBanner" hidden></div>
+
+  <div class="card runstats">
+    <div><div class="v" id="rReps">0</div><div class="k">반복</div></div>
+    <div><div class="v" id="rTime">0:00</div><div class="k">시간</div></div>
+    <div><div class="v" id="rHit">--</div><div class="k">목표 달성</div></div>
+  </div>
+  <button class="cta" id="btnRun">측정 시작<small>좌우 각도 기록 · 반복 자동 카운트</small></button>
+  <div class="reps" id="repList"></div>
+
+  <div class="simdock" id="simDock" hidden>
+    <div class="row" style="justify-content:space-between"><b class="small" style="color:var(--L)">시뮬레이션</b>
+      <div class="seg" id="simMode"><button data-m="auto" class="active">자동 반복</button><button data-m="manual">수동</button></div></div>
+    <label class="xs muted" id="simAngleWrap" hidden>각도 <b id="simAngleV">0</b>°<input type="range" id="simAngle" min="0" max="150" value="0"></label>
+    <label class="xs muted">좌우 차이 (오른쪽이 덜 굽힘) <b id="simAsymV">4</b>°<input type="range" id="simAsym" min="0" max="25" value="4"></label>
+  </div>
+</section>
+
+<!-- ================= 종목 ================= -->
+<section class="scr" id="scr-library">
+  <h1>종목 라이브러리</h1>
+  <input type="text" id="exSearch" placeholder="종목 검색 (예: 스쿼트, 재활)">
+  <div class="chips" id="catChips"></div>
+  <div class="card" style="padding:4px 12px" id="exList"></div>
+  <p class="xs muted">목표 각도는 일반적인 참고값입니다. 재활 종목은 담당 의료진이 정해준 목표가 있으면 [목표 수정]으로 그 값을 쓰세요.</p>
+</section>
+
+<!-- ================= 기록 ================= -->
+<section class="scr" id="scr-history">
+  <div class="card-head"><h1>기록</h1><span class="pill" id="planPill">무료 플랜</span></div>
+  <div class="card">
+    <div class="card-head">
+      <button class="btn sm ghost" id="calPrev" aria-label="이전 달">‹</button>
+      <h2 id="calTitle"></h2>
+      <button class="btn sm ghost" id="calNext" aria-label="다음 달">›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2 id="dayTitle">최근 30일</h2><button class="btn sm ghost" id="btnDayAll" hidden>전체 보기</button></div>
+    <div id="dayList" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div class="card" id="proCard"></div>
+</section>
+
+<!-- ================= 설정 ================= -->
+<section class="scr" id="scr-settings">
+  <h1>설정</h1>
+  <div class="card">
+    <h2>보호대</h2>
+    <div id="devList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="row">
+      <button class="btn" data-connect="L">왼쪽 연결</button>
+      <button class="btn" data-connect="R">오른쪽 연결</button>
+      <button class="btn" data-connect="LR">양쪽(한 대)</button>
+    </div>
+    <div class="switch"><span class="small">시뮬레이션 모드 <span class="xs muted">(보호대 없이 테스트)</span></span><input type="checkbox" id="simOn"></div>
+  </div>
+  <div class="card">
+    <h2>영점 맞추기</h2>
+    <p class="small muted" style="margin:0">관절을 곧게 편 자세에서 누르면 그 자세가 양쪽 0°가 됩니다. 굽혔을 때 숫자가 −로 나오면 방향 반전을 누르세요.</p>
+    <div class="row"><span class="pill L">L <span class="num" id="calL">--</span></span><span class="pill R">R <span class="num" id="calR">--</span></span></div>
+    <div class="row"><button class="btn" id="btnZero">지금 자세를 0°로</button><button class="btn sm" data-flip="L">L 방향 반전</button><button class="btn sm" data-flip="R">R 방향 반전</button></div>
+  </div>
+  <div class="card">
+    <h2>비대칭 경고</h2>
+    <label class="small">좌우 편차 기준 <b id="thrV">5</b>° 이상이면 경고<input type="range" id="thr" min="3" max="15" step="1"></label>
+    <div class="switch"><span class="small">진동</span><input type="checkbox" id="optVib"></div>
+    <div class="switch"><span class="small">경고음</span><input type="checkbox" id="optSound"></div>
+    <div class="switch"><span class="small">음성으로 횟수 세기</span><input type="checkbox" id="optVoice"></div>
+  </div>
+  <div class="card">
+    <h2>리마인더</h2>
+    <div class="switch"><span class="small">측정 안 한 날 알림</span><input type="checkbox" id="optRemind"></div>
+    <div class="row small">알림 시각 <input type="time" id="remindAt"></div>
+    <p class="xs muted" style="margin:0">웹앱은 앱이 열려 있거나 백그라운드에 있을 때만 알림을 띄울 수 있어요. 정해진 시간 푸시는 2단계 네이티브 앱에서 지원합니다.</p>
+  </div>
+  <div class="card">
+    <h2>화면</h2>
+    <div class="seg" id="themeSeg"><button data-t="system">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div>
+  </div>
+  <div class="card">
+    <h2>플랜</h2>
+    <div class="seg" id="planSeg"><button data-p="free">무료</button><button data-p="pro">Pro 체험</button></div>
+    <p class="xs muted" style="margin:0">Pro 체험: 30일 이전 기록, 주간 추이 그래프, 부상 위험도, 자동 코멘트를 미리 볼 수 있어요. 결제 기능은 아직 없습니다.</p>
+  </div>
+  <div class="card">
+    <h2>통신 설정 (고급)</h2>
+    <label class="xs muted">장치 이름 앞부분 (쉼표로 여러 개, 비우면 전체 검색)<input type="text" id="bleNames" style="width:100%"></label>
+    <label class="xs muted">Service UUID<input type="text" id="bleSvc" style="width:100%"></label>
+    <label class="xs muted">Characteristic UUID (비우면 notify 특성 자동 선택)<input type="text" id="bleChr" style="width:100%"></label>
+    <label class="xs muted">바이너리일 때 형식<select id="bleBin" style="width:100%"><option value="float32">float32 (값 1개 또는 L,R 2개)</option><option value="int16x100">int16 × 0.01 (값 1개 또는 2개)</option></select></label>
+    <div class="row"><button class="btn sm" id="btnBleSave">저장</button><button class="btn sm ghost" id="btnBleDefault">기본값</button></div>
+    <div class="xs muted">마지막 수신: <code id="lastPkt">--</code></div>
+  </div>
+  <div class="card">
+    <h2>데이터</h2>
+    <div class="row"><button class="btn" id="btnCsv">CSV 내보내기</button><button class="btn danger" id="btnReset">모든 기록 삭제</button></div>
+    <p class="xs muted" style="margin:0">기록은 이 휴대폰의 이 브라우저에만 저장됩니다. AngBrace 웹앱 v0.1 (MVP)</p>
+  </div>
+</section>
+</main>
+
+<nav class="tabbar"><div class="inner">
+  <button data-tab="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg>홈</button>
+  <button data-tab="measure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg>측정<span class="rec" id="recDot" hidden></span></button>
+  <button data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h9"/></svg>종목</button>
+  <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>기록</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>설정</button>
+</div></nav>
+
+<div class="sheet" id="sheet" hidden><div class="sheet-body" id="sheetBody"></div></div>
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ================= 유틸 ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const now = () => performance.now();
+const fmt = (v, d = 0) => (v == null || !isFinite(v)) ? '--' : (+v).toFixed(d);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const wrap180 = d => ((d + 180) % 360 + 360) % 360 - 180;
+const DAY = 86400000;
+const dayKey = ms => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const startOfDay = ms => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return +d; };
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let toastTimer;
+function toast(msg, ms = 2600) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ================= 저장 ================= */
+const DBKEY = 'angbrace.v1';
+const DEFAULT_BLE = { names: 'AngBrace, AS5600', svc: '12345678-1234-5678-1234-56789abcdef0', chr: '12345678-1234-5678-1234-56789abcdef1', bin: 'float32' };
+const defaults = () => ({
+  settings: { thr: 5, vibrate: true, sound: true, voice: false, remind: false, remindAt: '20:00', theme: 'system', plan: 'free' },
+  ble: { ...DEFAULT_BLE },
+  calib: { L: { zero: 0, dir: 1 }, R: { zero: 0, dir: 1 } },
+  favorites: ['squat', 'heelslide'], targets: {}, sessions: [], lastEx: 'squat', remindedOn: ''
+});
+function deepMerge(a, b) {
+  for (const k in b) {
+    const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+    a[k] = isObj(a[k]) && isObj(b[k]) ? deepMerge(a[k], b[k]) : b[k];
+  }
+  return a;
+}
+let db;
+try { const raw = localStorage.getItem(DBKEY); db = raw ? deepMerge(defaults(), JSON.parse(raw)) : defaults(); } catch (e) { db = defaults(); }
+function save() {
+  try { localStorage.setItem(DBKEY, JSON.stringify(db)); }
+  catch (e) {   // 용량 초과일 때만: 오래된 세션의 시계열부터 지운다 (요약은 유지)
+    const quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+    const s = quota && db.sessions.find(x => x.series);
+    if (s) { s.series = null; save(); }
+  }
+}
+const isPro = () => db.settings.plan === 'pro';
+
+/* ================= 종목 마스터 ================= */
+// t: {type:'flex', lo, hi} = 반복마다 최대 굴곡이 lo~hi / {type:'ext', max} = 반복마다 max° 이하까지 펴기
+const EX = [
+  { id: 'free',       name: '자유 측정',               cat: '전신', joint: '관절', t: null, tip: '목표 없이 좌우 각도와 편차만 기록합니다.' },
+  { id: 'squat',      name: '스쿼트',                  cat: '하체', joint: '무릎', t: { type: 'flex', lo: 90, hi: 110 }, tip: '허벅지가 바닥과 평행(무릎 약 90°) 이상 내려가고, 무릎은 발끝 방향으로.' },
+  { id: 'lunge',      name: '런지',                    cat: '하체', joint: '무릎', t: { type: 'flex', lo: 90, hi: 100 }, tip: '앞·뒤 무릎 모두 약 90°. 앞무릎이 안쪽으로 무너지지 않게.' },
+  { id: 'bss',        name: '불가리안 스플릿 스쿼트',  cat: '하체', joint: '무릎', t: { type: 'flex', lo: 90, hi: 110 }, tip: '앞다리 무릎 기준. 좌우 번갈아 같은 깊이로.' },
+  { id: 'legpress',   name: '레그 프레스',             cat: '하체', joint: '무릎', t: { type: 'flex', lo: 90, hi: 100 }, tip: '무릎이 가슴 쪽으로 과하게 접히지 않게, 끝에서 잠그지 않기.' },
+  { id: 'legext',     name: '레그 익스텐션',           cat: '하체', joint: '무릎', t: { type: 'ext', max: 5 }, tip: '끝에서 무릎을 완전히 펴고 1초 멈춤.' },
+  { id: 'legcurl',    name: '레그 컬',                 cat: '하체', joint: '무릎', t: { type: 'flex', lo: 110, hi: 130 }, tip: '끝까지 당긴 뒤 천천히 펴기.' },
+  { id: 'ohp',        name: '숄더 프레스',             cat: '상체', joint: '팔꿈치', t: { type: 'flex', lo: 80, hi: 100 }, tip: '내렸을 때 팔꿈치 약 90°. 좌우 팔 높이를 맞추세요.' },
+  { id: 'bench',      name: '벤치 프레스',             cat: '상체', joint: '팔꿈치', t: { type: 'flex', lo: 80, hi: 95 }, tip: '바를 내렸을 때 팔꿈치 약 90°.' },
+  { id: 'curl',       name: '바이셉 컬',               cat: '상체', joint: '팔꿈치', t: { type: 'flex', lo: 120, hi: 145 }, tip: '끝까지 말아 올리고 내릴 때 팔을 거의 다 펴기.' },
+  { id: 'tricep',     name: '트라이셉 익스텐션',       cat: '상체', joint: '팔꿈치', t: { type: 'ext', max: 10 }, tip: '팔꿈치를 끝까지 펴기.' },
+  { id: 'thruster',   name: '스러스터',                cat: '전신', joint: '무릎', t: { type: 'flex', lo: 90, hi: 110 }, tip: '프런트 스쿼트 깊이 후 밀어 올리기.' },
+  { id: 'wallball',   name: '월볼 샷',                 cat: '전신', joint: '무릎', t: { type: 'flex', lo: 90, hi: 110 }, tip: '매번 같은 깊이로 앉기.' },
+  { id: 'kbswing',    name: '케틀벨 스윙',             cat: '전신', joint: '무릎', t: { type: 'flex', lo: 20, hi: 40 }, tip: '스쿼트가 아니라 힙 힌지. 무릎은 살짝만 굽힙니다.' },
+  { id: 'heelslide',  name: '힐 슬라이드 (무릎 굴곡)', cat: '재활', joint: '무릎', t: { type: 'flex', lo: 90, hi: 120 }, tip: '누워서 발뒤꿈치를 엉덩이 쪽으로. 통증 없는 범위에서 천천히.' },
+  { id: 'seatedflex', name: '앉아서 무릎 굽히기',      cat: '재활', joint: '무릎', t: { type: 'flex', lo: 100, hi: 130 }, tip: '의자에 앉아 발을 뒤로 당기기.' },
+  { id: 'tke',        name: '무릎 끝까지 펴기 (TKE)',  cat: '재활', joint: '무릎', t: { type: 'ext', max: 5 }, tip: '밴드를 무릎 뒤에 걸고 끝까지 펴기. 0°에 가까울수록 좋아요.' },
+  { id: 'elbowrom',   name: '팔꿈치 굴곡·신전',        cat: '재활', joint: '팔꿈치', t: { type: 'flex', lo: 130, hi: 145 }, tip: '천천히 끝까지 굽혔다 펴기.' },
+  { id: 'shoulderer', name: '어깨 외회전',             cat: '재활', joint: '어깨', t: { type: 'flex', lo: 60, hi: 90 }, tip: '팔꿈치를 옆구리에 붙이고 90° 굽힌 채 바깥으로 돌리기.' },
+  { id: 'wristflex',  name: '손목 굴곡',               cat: '재활', joint: '손목', t: { type: 'flex', lo: 60, hi: 80 }, tip: '손바닥 쪽으로 천천히 굽히기.' },
+  { id: 'wristext',   name: '손목 신전',               cat: '재활', joint: '손목', t: { type: 'flex', lo: 50, hi: 70 }, tip: '손등 쪽으로 젖히기 (움직인 각도 기준).' }
+];
+const exById = id => EX.find(e => e.id === id) || EX[0];
+const CATS = ['전체', '즐겨찾기', '하체', '상체', '전신', '재활'];
+
+function targetFor(ex) {
+  if (!ex.t) return null;
+  const custom = db.targets[ex.id];
+  if (custom) return { ...ex.t, ...custom, src: 'custom' };
+  if (ex.t.type === 'flex') {
+    // 개인 맞춤: 최근 기록이 가이드보다 확실히 낮으면 목표를 단계적으로 낮춰 제시
+    const past = db.sessions.filter(s => s.ex === ex.id && s.reps > 0 && s.peakAvg != null).slice(-5);
+    if (past.length >= 3) {
+      const avg = past.reduce((a, s) => a + s.peakAvg, 0) / past.length;
+      if (avg < ex.t.lo - 5) {
+        const lo = Math.round(avg + 5), hi = lo + (ex.t.hi - ex.t.lo);
+        return { type: 'flex', lo, hi, src: 'personal', note: `최근 ${past.length}회 평균 최대 굴곡이 ${fmt(avg)}°라서, 무리하지 않도록 ${lo}°부터 단계적으로 목표를 잡았어요. (가이드 ${ex.t.lo}–${ex.t.hi}°)` };
+      }
+    }
+  }
+  return { ...ex.t, src: 'guide' };
+}
+const targetText = t => !t ? '목표 없음' : t.type === 'flex' ? `굴곡 ${t.lo}–${t.hi}°` : `신전 ${t.max}° 이하`;
+const SRC_TEXT = { guide: '일반 가이드', personal: '내 기록 기반 추천', custom: '내가 정한 목표' };
+
+/* ================= 센서 값 (좌/우) ================= */
+const SIDE = { L: { raw: null, angle: null, t: 0, cnt: 0, hz: 0 }, R: { raw: null, angle: null, t: 0, cnt: 0, hz: 0 } };
+const fresh = s => SIDE[s].angle != null && now() - SIDE[s].t < 1000;
+function setSide(s, raw) {
+  if (raw == null || !isFinite(raw)) return;
+  const c = db.calib[s], S = SIDE[s];
+  const a = c.dir * wrap180(raw - c.zero);
+  S.angle = (S.angle == null || now() - S.t > 1000) ? a : S.angle + 0.4 * (a - S.angle);
+  S.raw = raw; S.t = now(); S.cnt++;
+}
+setInterval(() => { for (const s of ['L', 'R']) { SIDE[s].hz = SIDE[s].cnt; SIDE[s].cnt = 0; } }, 1000);
+
+/* ================= BLE ================= */
+const devices = [];   // {dev, side:'L'|'R'|'LR', name, status, battery, fw, buf, retries, poll, manual}
+const dec = new TextDecoder();
+function toUuid(s) {
+  s = String(s || '').trim().toLowerCase().replace(/^0x/, '');
+  return /^[0-9a-f]{4}$/.test(s) ? parseInt(s, 16) : s;
+}
+async function connectDevice(side) {
+  if (!navigator.bluetooth) return toast('이 브라우저는 블루투스 연결을 지원하지 않아요. 안드로이드나 PC의 Chrome에서 열어주세요.', 4000);
+  if (!db.ble.svc) return toast('설정 > 통신 설정에서 Service UUID를 입력하세요.');
+  const svc = toUuid(db.ble.svc);
+  const names = db.ble.names.split(',').map(s => s.trim()).filter(Boolean);
+  const optionalServices = [svc, 'battery_service', 'device_information'];
+  let dev;
+  try {
+    dev = await navigator.bluetooth.requestDevice(names.length
+      ? { filters: names.map(n => ({ namePrefix: n })), optionalServices }
+      : { acceptAllDevices: true, optionalServices });
+  } catch (e) { return; }
+  let d = devices.find(x => x.dev.id === dev.id);
+  if (d) d.side = side;
+  else {
+    d = { dev, side, name: dev.name || '보호대', status: '연결 중', battery: null, fw: null, buf: '', retries: 0, poll: null, manual: false };
+    devices.push(d);
+    dev.addEventListener('gattserverdisconnected', () => onDisconnected(d));
+  }
+  await gattSetup(d);
+}
+async function gattSetup(d) {
+  d.status = d.retries ? `재연결 중 (${d.retries}/5)` : '연결 중'; renderDevices();
+  try {
+    const gatt = await d.dev.gatt.connect();
+    const service = await gatt.getPrimaryService(toUuid(db.ble.svc));
+    let ch;
+    if (db.ble.chr) ch = await service.getCharacteristic(toUuid(db.ble.chr));
+    else {
+      const list = await service.getCharacteristics();
+      ch = list.find(x => x.properties.notify || x.properties.indicate) || list.find(x => x.properties.read);
+      if (!ch) throw new Error('각도 특성을 찾지 못했어요');
+    }
+    clearInterval(d.poll);
+    if (ch.properties.notify || ch.properties.indicate) {
+      ch.addEventListener('characteristicvaluechanged', e => onPacket(d, e.target.value));
+      await ch.startNotifications();
+    } else {
+      d.poll = setInterval(async () => { if (d.busy) return; d.busy = true; try { onPacket(d, await ch.readValue()); } catch (e) {} d.busy = false; }, 50);
+    }
+    d.status = '연결됨'; d.retries = 0;
+    try {   // 표준 배터리 서비스가 있으면 표시
+      const bc = await (await gatt.getPrimaryService('battery_service')).getCharacteristic('battery_level');
+      d.battery = (await bc.readValue()).getUint8(0);
+      if (bc.properties.notify) { bc.addEventListener('characteristicvaluechanged', e => { d.battery = e.target.value.getUint8(0); renderDevices(); }); await bc.startNotifications(); }
+    } catch (e) {}
+    try { d.fw = dec.decode(await (await (await gatt.getPrimaryService('device_information')).getCharacteristic('firmware_revision_string')).readValue()); } catch (e) {}
+    buzz(60);
+  } catch (e) {
+    if (d.retries > 0) { renderDevices(); return onDisconnected(d); }
+    d.status = '연결 실패';
+    toast('연결 실패: ' + e.message + ' — 설정의 UUID가 nRF Connect와 같은지 확인하세요.', 5000);
+  }
+  renderDevices();
+}
+function onDisconnected(d) {
+  clearInterval(d.poll);
+  if (d.manual) { devices.splice(devices.indexOf(d), 1); renderDevices(); return; }
+  if (d.retries >= 5) { d.status = '끊김'; renderDevices(); toast(`${d.name} 연결이 끊겼어요.`); return; }
+  d.retries++;
+  d.status = `재연결 중 (${d.retries}/5)`; renderDevices();
+  setTimeout(() => gattSetup(d), 800 * d.retries);
+}
+function removeDevice(d) {
+  d.manual = true; clearInterval(d.poll);
+  if (d.dev.gatt.connected) d.dev.gatt.disconnect();
+  else { devices.splice(devices.indexOf(d), 1); renderDevices(); }
+}
+// 텍스트 한 줄 해석: "L:92.1,R:88.4" / "L92 R88" / "92.1,88.4" / "9.05"
+function parseText(line) {
+  const t = line.trim(); if (!t) return null;
+  const lm = t.match(/\bL(?:eft)?\s*[:=,]?\s*(-?\d+(?:\.\d+)?)/i), rm = t.match(/\bR(?:ight)?\s*[:=,]?\s*(-?\d+(?:\.\d+)?)/i);
+  if (lm || rm) return { L: lm ? +lm[1] : null, R: rm ? +rm[1] : null };
+  const nums = t.match(/-?\d+(?:\.\d+)?/g);
+  if (!nums) return null;
+  return nums.length >= 2 ? { L: +nums[0], R: +nums[1] } : { single: +nums[0] };
+}
+function applyValues(d, v) {
+  if (!v) return;
+  if (v.single != null) setSide(d.side === 'R' ? 'R' : 'L', v.single);
+  else { if (v.L != null) setSide('L', v.L); if (v.R != null) setSide('R', v.R); }
+}
+let lastPacket = '';
+function onPacket(d, dv) {
+  const bytes = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
+  const isText = bytes.length > 0 && bytes.every(b => b === 10 || b === 13 || (b >= 32 && b < 127));
+  lastPacket = `${d.name}: ${[...bytes].map(b => b.toString(16).padStart(2, '0')).join(' ')}${isText ? `  "${dec.decode(bytes).trim()}"` : ''}`;
+  if (isText) {
+    d.buf += dec.decode(bytes);
+    let lines;
+    if (d.buf.includes('\n')) { const parts = d.buf.split('\n'); d.buf = parts.pop(); lines = parts; }
+    else { lines = [d.buf]; d.buf = ''; }   // 줄바꿈 없는 장치는 알림 1개 = 값 1개
+    lines.forEach(l => applyValues(d, parseText(l)));
+  } else {
+    const vals = [];
+    if (db.ble.bin === 'int16x100') for (let i = 0; i + 2 <= bytes.length && vals.length < 2; i += 2) vals.push(dv.getInt16(i, true) / 100);
+    else for (let i = 0; i + 4 <= bytes.length && vals.length < 2; i += 4) vals.push(dv.getFloat32(i, true));
+    applyValues(d, vals.length >= 2 ? { L: vals[0], R: vals[1] } : { single: vals[0] });
+  }
+}
+
+/* ================= 시뮬레이션 ================= */
+const sim = { on: false, timer: null, mode: 'auto', cur: 0, k: -1, depth: 1 };
+function setSim(on) {
+  sim.on = on; clearInterval(sim.timer);
+  if (on) sim.timer = setInterval(simTick, 40);
+  $('#simOn').checked = on; $('#simDock').hidden = !on;
+  renderDevices();
+}
+function simTick() {
+  const ex = exById(db.lastEx), tg = targetFor(ex);
+  const peakGoal = tg ? (tg.type === 'flex' ? (tg.lo + tg.hi) / 2 : 90) : 100;
+  let target;
+  if (sim.mode === 'auto') {
+    const per = 3, t = now() / 1000, k = Math.floor(t / per);
+    if (k !== sim.k) { sim.k = k; sim.depth = 0.8 + Math.random() * 0.3; }
+    const ph = (t % per) / per, sh = (1 - Math.cos(2 * Math.PI * ph)) / 2;
+    target = tg && tg.type === 'ext' ? 90 - 90 * sh * sim.depth : peakGoal * sim.depth * sh;
+  } else target = +$('#simAngle').value;
+  sim.cur += (target - sim.cur) * 0.3;
+  const asym = +$('#simAsym').value, n = () => (Math.random() - 0.5) * 0.8;
+  const L = sim.cur + n(), R = sim.cur - asym * clamp(sim.cur / Math.max(30, peakGoal), 0, 1.2) + n();
+  // 보정값과 무관하게 슬라이더 각도가 그대로 나오는 가상 보호대
+  for (const [s, a] of [['L', L], ['R', R]]) { const c = db.calib[s]; setSide(s, c.zero + c.dir * a); }
+}
+$$('#simMode button').forEach(b => b.onclick = () => {
+  sim.mode = b.dataset.m; $$('#simMode button').forEach(x => x.classList.toggle('active', x === b));
+  $('#simAngleWrap').hidden = sim.mode !== 'manual';
+});
+$('#simAngle').oninput = e => $('#simAngleV').textContent = e.target.value;
+$('#simAsym').oninput = e => $('#simAsymV').textContent = e.target.value;
+$('#simOn').onchange = e => setSim(e.target.checked);
+
+/* ================= 피드백 (진동·소리·음성) ================= */
+let actx = null;
+function beep(freq = 880, ms = 160) {
+  if (!db.settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.frequency.value = freq; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + ms / 1000);
+    o.start(t); o.stop(t + ms / 1000);
+  } catch (e) {}
+}
+function buzz(p) { if (db.settings.vibrate && navigator.vibrate) navigator.vibrate(p); }
+function speak(text) {
+  if (!db.settings.voice || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; u.rate = 1.15;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ================= 반복 카운터 ================= */
+class RepCounter {
+  constructor() { this.h = 6; this.minAmp = 18; this.phase = 'idle'; this.base = null; this.peak = null; this.newWin(); }
+  newWin() { this.win = { L: { min: Infinity, max: -Infinity }, R: { min: Infinity, max: -Infinity } }; }
+  update(x, L, R, t) {
+    if (L != null) { this.win.L.min = Math.min(this.win.L.min, L); this.win.L.max = Math.max(this.win.L.max, L); }
+    if (R != null) { this.win.R.min = Math.min(this.win.R.min, R); this.win.R.max = Math.max(this.win.R.max, R); }
+    if (this.phase === 'idle') {
+      if (this.base == null || x < this.base) { this.base = x; this.tb = t; }
+      if (x - this.base > this.h) { this.phase = 'out'; this.peak = x; }
+    } else if (this.phase === 'out') {
+      if (x > this.peak) this.peak = x;
+      else if (this.peak - x > this.h) this.phase = 'back';
+    } else {
+      if (x > this.peak) { this.peak = x; this.phase = 'out'; return null; }
+      const amp = this.peak - this.base;
+      if (x <= this.peak - 0.8 * amp) {
+        let rep = null;
+        if (amp >= this.minAmp) {
+          const w = this.win, side = s => w[s].max > -Infinity ? { min: w[s].min, max: w[s].max } : null;
+          rep = { amp, dur: (t - this.tb) / 1000, L: side('L'), R: side('R') };
+          this.newWin();
+        }
+        this.phase = 'idle'; this.base = x; this.tb = t;
+        return rep;
+      }
+    }
+    return null;
+  }
+}
+function judgeSide(v, tg) {
+  if (!tg || !v) return null;
+  if (tg.type === 'flex') return v.max < tg.lo ? 'short' : v.max > tg.hi ? 'over' : 'in';
+  return v.min <= tg.max ? 'in' : 'short';
+}
+
+/* ================= 측정 세션 ================= */
+const Sess = { running: false };
+function startSession() {
+  if (!fresh('L') && !fresh('R')) {
+    toast('보호대 데이터가 없어요. 설정에서 보호대를 연결하거나 시뮬레이션을 켜세요.', 3500);
+    return false;
+  }
+  const ex = exById(db.lastEx);
+  Object.assign(Sess, {
+    running: true, ex, tg: targetFor(ex), t0: now(), startedAt: Date.now(), counter: new RepCounter(), reps: [], tick: 0, stride: 4,
+    series: [], st: { L: { min: Infinity, max: -Infinity }, R: { min: Infinity, max: -Infinity }, devSum: 0, devN: 0, devMax: 0, overN: 0 },
+    alerts: 0, overStart: 0, lastAlert: 0
+  });
+  Sess.timer = setInterval(sessionTick, 50);
+  requestWakeLock();
+  $('#repList').innerHTML = ''; $('#alertBanner').hidden = true;
+  beep(660, 120); speak('측정 시작');
+  renderMeasure();
+  return true;
+}
+function sessionTick() {
+  const t = now(), L = fresh('L') ? SIDE.L.angle : null, R = fresh('R') ? SIDE.R.angle : null;
+  if (L == null && R == null) return;
+  const st = Sess.st;
+  if (L != null) { st.L.min = Math.min(st.L.min, L); st.L.max = Math.max(st.L.max, L); }
+  if (R != null) { st.R.min = Math.min(st.R.min, R); st.R.max = Math.max(st.R.max, R); }
+  // 시계열 (기본 5 Hz, 길어지면 간격을 늘림)
+  if (Sess.tick++ % Sess.stride === 0) {
+    Sess.series.push([Math.round((t - Sess.t0) / 100), L == null ? null : Math.round(L * 10), R == null ? null : Math.round(R * 10)]);
+    if (Sess.series.length > 3600) { Sess.series = Sess.series.filter((_, i) => i % 2 === 0); Sess.stride *= 2; }
+  }
+  // 좌우 편차 & 경고
+  if (L != null && R != null) {
+    const d = Math.abs(L - R), thr = db.settings.thr;
+    st.devSum += d; st.devN++; st.devMax = Math.max(st.devMax, d);
+    if (d > thr) {
+      st.overN++;
+      if (!Sess.overStart) Sess.overStart = t;
+      if (t - Sess.overStart > 300 && t - Sess.lastAlert > 2500) fireAlert(d, L, R);
+    } else Sess.overStart = 0;
+  }
+  const x = L != null && R != null ? (L + R) / 2 : (L ?? R);
+  const rep = Sess.counter.update(x, L, R, t);
+  if (rep) onRep(rep);
+}
+function fireAlert(d, L, R) {
+  Sess.lastAlert = now(); Sess.alerts++;
+  const less = L < R ? '왼쪽' : '오른쪽';
+  const b = $('#alertBanner');
+  b.hidden = false; b.textContent = `⚠ 좌우 편차 ${fmt(d, 1)}° — ${less}이 덜 굽혀졌어요`;
+  b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
+  buzz([120, 60, 120]); beep(980, 180);
+  clearTimeout(Sess.alertHide); Sess.alertHide = setTimeout(() => { b.hidden = true; }, 2200);
+}
+function onRep(rep) {
+  const tg = Sess.tg, jL = judgeSide(rep.L, tg), jR = judgeSide(rep.R, tg);
+  const js = [jL, jR].filter(Boolean);
+  rep.verdict = !tg ? 'none' : js.every(j => j === 'in') ? 'in' : js.includes('over') ? 'over' : 'short';
+  rep.jL = jL; rep.jR = jR;
+  const key = tg && tg.type === 'ext' ? 'min' : 'max';
+  rep.dev = rep.L && rep.R ? Math.abs(rep.L[key] - rep.R[key]) : null;
+  Sess.reps.push(rep);
+  const n = Sess.reps.length;
+  speak(rep.verdict === 'short' ? `${n}. 조금 더` : String(n));
+  const pillCls = { in: 'ok', short: 'warn', over: 'bad', none: '' }[rep.verdict];
+  const pillTxt = { in: '목표 ✓', short: tg && tg.type === 'ext' ? '덜 폄' : '덜 굽힘', over: '과굴곡', none: '기록' }[rep.verdict];
+  const v = s => rep[s] ? fmt(rep[s][key]) + '°' : '--';
+  $('#repList').insertAdjacentHTML('afterbegin', `<div class="repline"><span class="n">#${n}</span><span class="l">L ${v('L')}</span><span class="r">R ${v('R')}</span><span class="pill ${pillCls}">${pillTxt}</span></div>`);
+}
+function stopSession() {
+  clearInterval(Sess.timer); Sess.running = false; releaseWakeLock();
+  const dur = (now() - Sess.t0) / 1000;
+  renderMeasure();
+  if (dur < 3) { toast('3초 미만이라 저장하지 않았어요.'); return; }
+  const st = Sess.st, reps = Sess.reps, tg = Sess.tg;
+  const sideSum = s => {
+    if (st[s].max === -Infinity) return null;
+    const r = reps.filter(x => x[s]);
+    return {
+      min: +st[s].min.toFixed(1), max: +st[s].max.toFixed(1), rom: +(st[s].max - st[s].min).toFixed(1),
+      peakAvg: r.length ? +(r.reduce((a, x) => a + x[s].max, 0) / r.length).toFixed(1) : null,
+      lowAvg: r.length ? +(r.reduce((a, x) => a + x[s].min, 0) / r.length).toFixed(1) : null
+    };
+  };
+  const L = sideSum('L'), R = sideSum('R');
+  const peaks = [L && L.peakAvg, R && R.peakAvg].filter(v => v != null);
+  const s = {
+    id: Date.now().toString(36), date: Sess.startedAt, ex: Sess.ex.id, name: Sess.ex.name, cat: Sess.ex.cat, joint: Sess.ex.joint,
+    dur: Math.round(dur), reps: reps.length, target: tg ? { type: tg.type, lo: tg.lo, hi: tg.hi, max: tg.max } : null, thr: db.settings.thr,
+    L, R, peakAvg: peaks.length ? +(peaks.reduce((a, v) => a + v, 0) / peaks.length).toFixed(1) : null,
+    devAvg: st.devN ? +(st.devSum / st.devN).toFixed(1) : null, devMax: st.devN ? +st.devMax.toFixed(1) : null,
+    overPct: st.devN ? Math.round(st.overN / st.devN * 100) : null, alerts: Sess.alerts,
+    inTarget: tg ? reps.filter(r => r.verdict === 'in').length : null,
+    repList: reps.map(r => ({ L: r.L ? +r.L.max.toFixed(1) : null, R: r.R ? +r.R.max.toFixed(1) : null, Lmin: r.L ? +r.L.min.toFixed(1) : null, Rmin: r.R ? +r.R.min.toFixed(1) : null, v: r.verdict })),
+    series: Sess.series, stride: Sess.stride
+  };
+  db.sessions.push(s); save();
+  beep(520, 200); speak(`${s.reps}회 저장했어요`);
+  renderHome(); openSession(s, true);
+}
+let wakeLock = null;
+async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (e) {} }
+function releaseWakeLock() { try { wakeLock?.release(); } catch (e) {} wakeLock = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Sess.running) requestWakeLock(); });
+
+/* ================= 게이지 ================= */
+const GMAX = 150, GC = { x: 90, y: 94, r: 70 };
+function gp(a) { const th = Math.PI * (1 - clamp(a, 0, GMAX) / GMAX); return [GC.x + GC.r * Math.cos(th), GC.y - GC.r * Math.sin(th)]; }
+function arcD(a0, a1) {
+  a0 = clamp(a0, 0, GMAX); a1 = clamp(a1, 0, GMAX);
+  if (a1 - a0 < 0.3) return '';
+  const [x0, y0] = gp(a0), [x1, y1] = gp(a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${GC.r} ${GC.r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+function buildGauge(s) {
+  const label = s === 'L' ? '왼쪽 L' : '오른쪽 R';
+  const tick = a => { const [x, y] = gp(a), [x2, y2] = [GC.x + (x - GC.x) * 1.22, GC.y + (y - GC.y) * 1.22]; return `<text x="${x2.toFixed(1)}" y="${(y2 + 4).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--num)">${a}</text>`; };
+  $('#gauge' + s).innerHTML = `<span class="side">${label}</span>
+    <svg viewBox="-8 0 196 104" aria-hidden="true">
+      <path d="${arcD(0, GMAX)}" fill="none" stroke="var(--surface2)" stroke-width="12" stroke-linecap="round"/>
+      <path id="gt${s}" d="" fill="none" stroke="var(--ok)" stroke-opacity=".35" stroke-width="20"/>
+      <path id="gv${s}" d="" fill="none" stroke="var(--${s})" stroke-width="12" stroke-linecap="round"/>
+      <circle id="gd${s}" cx="${GC.x - GC.r}" cy="${GC.y}" r="7" fill="var(--surface)" stroke="var(--${s})" stroke-width="4"/>
+      ${tick(0)}${tick(90)}${tick(150)}
+    </svg>
+    <div class="ang" id="ga${s}">--<small>°</small></div>
+    <div class="sub" id="gs${s}">미연결</div>`;
+}
+function updateGauge(s) {
+  const ok = fresh(s), a = ok ? SIDE[s].angle : null, tg = Sess.running ? Sess.tg : targetFor(exById(db.lastEx));
+  const el = $('#gauge' + s);
+  el.classList.toggle('off', !ok);
+  $('#gt' + s).setAttribute('d', !tg ? '' : tg.type === 'flex' ? arcD(tg.lo, tg.hi) : arcD(0, tg.max));
+  $('#gv' + s).setAttribute('d', ok ? arcD(0, a) : '');
+  const [x, y] = gp(ok ? a : 0); $('#gd' + s).setAttribute('cx', x.toFixed(1)); $('#gd' + s).setAttribute('cy', y.toFixed(1));
+  $('#ga' + s).innerHTML = (ok ? fmt(a) : '--') + '<small>°</small>';
+  let sub = ok ? '실시간' : '미연결';
+  if (ok && Sess.running) { const w = Sess.counter.win[s]; if (w.max > -Infinity) sub = `이번 반복 최대 ${fmt(w.max)}°`; }
+  $('#gs' + s).textContent = sub;
+}
+
+/* ================= 화면: 공통 ================= */
+let tab = 'home';
+function go(t) {
+  tab = t;
+  $$('.tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+  $$('.scr').forEach(s => s.classList.toggle('active', s.id === 'scr-' + t));
+  window.scrollTo(0, 0);
+  if (t === 'home') renderHome();
+  if (t === 'measure') renderMeasure();
+  if (t === 'library') renderLibrary();
+  if (t === 'history') renderHistory();
+  if (t === 'settings') renderSettings();
+}
+$$('.tabbar button').forEach(b => b.onclick = () => go(b.dataset.tab));
+$$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+$('#devPill').onclick = () => go('settings');
+
+function renderDevices() {
+  const conn = devices.filter(d => d.status === '연결됨');
+  const led = $('#devLed');
+  led.className = 'led' + (conn.length ? ' on' : sim.on ? ' sim' : devices.some(d => d.status.startsWith('재연결')) ? ' warn' : '');
+  const sides = conn.map(d => d.side === 'LR' ? 'L·R' : d.side).join(' ');
+  $('#devText').textContent = conn.length ? `연결됨 ${sides}` : sim.on ? '시뮬레이션' : devices.some(d => d.status.startsWith('재연결')) ? '재연결 중…' : '보호대 연결';
+  const rows = devices.map((d, i) => `<div class="row" style="justify-content:space-between;background:var(--surface2);border-radius:12px;padding:10px 12px">
+      <div><b>${esc(d.name)}</b> <span class="pill ${d.side === 'R' ? 'R' : 'L'}">${d.side === 'LR' ? '양쪽' : d.side === 'L' ? '왼쪽' : '오른쪽'}</span>
+      <div class="xs muted">${esc(d.status)}${d.battery != null ? ` · 배터리 ${d.battery}%` : ''}${d.fw ? ` · FW ${esc(d.fw)}` : ''}</div></div>
+      <div class="row">${d.status === '끊김' || d.status === '연결 실패' ? `<button class="btn sm" data-retry="${i}">다시 연결</button>` : ''}<button class="btn sm ghost" data-remove="${i}">해제</button></div></div>`);
+  if (sim.on) rows.push(`<div class="row" style="background:var(--L-soft);border-radius:12px;padding:10px 12px"><b style="color:var(--L)">시뮬레이션 보호대</b><span class="xs muted">L·R 가상 데이터</span></div>`);
+  $('#devList').innerHTML = rows.join('') || '<div class="small muted">연결된 보호대가 없어요. 보호대 전원을 켜고 아래 버튼을 누르세요.</div>';
+  $$('[data-remove]').forEach(b => b.onclick = () => removeDevice(devices[+b.dataset.remove]));
+  $$('[data-retry]').forEach(b => b.onclick = () => { const d = devices[+b.dataset.retry]; d.retries = 0; gattSetup(d); });
+}
+$$('[data-connect]').forEach(b => b.onclick = () => connectDevice(b.dataset.connect));
+
+/* ================= 화면: 홈 ================= */
+function streak() {
+  const days = new Set(db.sessions.map(s => dayKey(s.date)));
+  let d = startOfDay(Date.now()), n = 0;
+  if (!days.has(dayKey(d))) d -= DAY;   // 오늘 아직이면 어제부터 셈
+  while (days.has(dayKey(d))) { n++; d -= DAY; }
+  return { n, today: days.has(dayKey(Date.now())) };
+}
+function renderHome() {
+  const d = new Date();
+  $('#homeDate').textContent = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
+  const ex = exById(db.lastEx);
+  $('#quickEx').textContent = `${ex.name} · ${targetText(targetFor(ex))}`;
+  const sk = streak();
+  $('#streakV').innerHTML = `${sk.n}<small>일</small>`;
+  $('#streakNote').textContent = sk.n === 0 ? '오늘 측정하면 시작돼요' : sk.today ? '오늘도 완료! 🔥' : '오늘 측정하면 이어져요';
+  const todays = db.sessions.filter(s => dayKey(s.date) === dayKey(Date.now()));
+  $('#todayV').innerHTML = `${todays.reduce((a, s) => a + s.reps, 0)}<small>회</small>`;
+  $('#todayNote').textContent = `세션 ${todays.length} · ${Math.round(todays.reduce((a, s) => a + s.dur, 0) / 60)}분`;
+  $('#homeTitle').textContent = sk.today ? '오늘 측정 완료. 좌우 균형을 확인해보세요' : '오늘도 좌우 균형 체크해요';
+  const last = db.sessions[db.sessions.length - 1];
+  $('#lastSess').innerHTML = last ? sessCard(last) : '<div class="small muted">아직 기록이 없어요. 위의 [오늘의 측정 시작]을 눌러보세요.</div>';
+  $$('#lastSess [data-sess]').forEach(b => b.onclick = () => openSession(db.sessions.find(s => s.id === b.dataset.sess)));
+  $('#favChips').innerHTML = db.favorites.map(id => `<button class="chip" data-fav="${id}">${esc(exById(id).name)}</button>`).join('') || '<span class="small muted">종목 라이브러리에서 ☆를 눌러 추가하세요.</span>';
+  $$('[data-fav]').forEach(b => b.onclick = () => { selectEx(b.dataset.fav); go('measure'); });
+  drawWeek();
+  checkReminder();
+}
+$('#btnQuick').onclick = () => { go('measure'); if (!Sess.running) startSession(); };
+function sessCard(s) {
+  const bar = (side, v) => v == null ? '' : `<div class="lrbar"><b style="color:var(--${side})">${side}</b><div class="track"><div class="fill" style="width:${clamp(v / GMAX * 100, 0, 100)}%;background:var(--${side})"></div></div><span class="num">${fmt(v)}°</span></div>`;
+  const devCls = s.devAvg == null ? '' : s.devAvg <= s.thr * 0.6 ? 'ok' : s.devAvg <= s.thr ? 'warn' : 'bad';
+  const peak = side => s[side] ? (s.target && s.target.type === 'ext' ? s[side].lowAvg ?? s[side].min : s[side].peakAvg ?? s[side].max) : null;
+  return `<button class="sess" data-sess="${s.id}">
+    <span class="t">${esc(s.name)}</span><span class="num small">${s.reps}회</span>
+    <span class="xs muted">${new Date(s.date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${mmss(s.dur)}</span>
+    <span>${s.devAvg != null ? `<span class="pill ${devCls}">편차 ${fmt(s.devAvg, 1)}°</span>` : ''}</span>
+    ${bar('L', peak('L'))}${bar('R', peak('R'))}
+  </button>`;
+}
+function fitCanvas(cv, h) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth;
+  if (!w) return null;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + 'px'; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+function drawWeek() {
+  const f = fitCanvas($('#weekChart'), 130); if (!f) return;
+  const { ctx, w, h } = f, today = startOfDay(Date.now());
+  const days = [...Array(7)].map((_, i) => { const d0 = today - (6 - i) * DAY; const ss = db.sessions.filter(s => s.date >= d0 && s.date < d0 + DAY); return { d0, reps: ss.reduce((a, s) => a + s.reps, 0), n: ss.length }; });
+  const max = Math.max(10, ...days.map(d => d.reps));
+  $('#weekSum').textContent = `총 ${days.reduce((a, d) => a + d.reps, 0)}회 · ${days.filter(d => d.n).length}일 측정`;
+  ctx.clearRect(0, 0, w, h);
+  const bw = (w - 12) / 7, top = 16, bottom = h - 22;
+  ctx.textAlign = 'center'; ctx.font = `11px ${cssVar('--sans')}`;
+  days.forEach((d, i) => {
+    const x = 6 + i * bw, bh = (bottom - top) * d.reps / max, isToday = i === 6;
+    ctx.fillStyle = cssVar('--surface2'); roundRect(ctx, x + bw * 0.22, top, bw * 0.56, bottom - top, 6); ctx.fill();
+    if (d.reps) { ctx.fillStyle = isToday ? cssVar('--brand') : cssVar('--L'); roundRect(ctx, x + bw * 0.22, bottom - bh, bw * 0.56, bh, 6); ctx.fill(); }
+    ctx.fillStyle = cssVar(isToday ? '--ink' : '--muted');
+    ctx.fillText(isToday ? '오늘' : '일월화수목금토'[new Date(d.d0).getDay()], x + bw / 2, h - 6);
+    if (d.reps) { ctx.fillStyle = cssVar('--ink'); ctx.font = `600 11px ${cssVar('--num')}`; ctx.fillText(d.reps, x + bw / 2, bottom - bh - 4); ctx.font = `11px ${cssVar('--sans')}`; }
+  });
+}
+function roundRect(ctx, x, y, w, h, r) {
+  if (w <= 0 || h <= 0) { ctx.beginPath(); return; }
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+/* ================= 화면: 측정 ================= */
+function selectEx(id) {
+  if (Sess.running) return toast('측정 중에는 종목을 바꿀 수 없어요.');
+  db.lastEx = id; save();
+}
+function renderMeasure() {
+  const ex = exById(db.lastEx), tg = Sess.running ? Sess.tg : targetFor(ex);
+  $('#mCat').textContent = `${ex.cat} · ${ex.joint}`;
+  $('#mName').textContent = ex.name;
+  $('#mTarget').textContent = targetText(tg);
+  $('#mTarget').className = 'pill ' + (tg ? 'ok' : '');
+  $('#mTargetSrc').textContent = tg ? SRC_TEXT[tg.src] || '' : '';
+  $('#mTip').hidden = !ex.tip; $('#mTip').textContent = '💡 ' + ex.tip;
+  $('#mPersonal').hidden = !(tg && tg.note); $('#mPersonal').textContent = tg && tg.note ? '📈 ' + tg.note : '';
+  $('#btnChangeEx').disabled = Sess.running; $('#btnEditTarget').disabled = Sess.running || !ex.t;
+  $('#thrLabel').textContent = db.settings.thr;
+  const b = $('#btnRun');
+  b.classList.toggle('stop', Sess.running);
+  b.innerHTML = Sess.running ? '측정 종료<small>종료하면 자동으로 저장돼요</small>' : '측정 시작<small>좌우 각도 기록 · 반복 자동 카운트</small>';
+  $('#recDot').hidden = !Sess.running;
+  if (!Sess.running) { $('#rReps').textContent = '0'; $('#rTime').textContent = '0:00'; $('#rHit').textContent = '--'; }
+}
+$('#btnRun').onclick = () => Sess.running ? stopSession() : startSession();
+$('#btnChangeEx').onclick = () => go('library');
+$('#btnEditTarget').onclick = () => {
+  const box = $('#targetEdit'); box.hidden = !box.hidden;
+  const ex = exById(db.lastEx), tg = targetFor(ex);
+  $('#targetInputs').innerHTML = ex.t.type === 'flex'
+    ? `<label class="small">최소 <input type="number" id="tgLo" value="${tg.lo}" min="0" max="160"></label><label class="small">최대 <input type="number" id="tgHi" value="${tg.hi}" min="0" max="160"></label><span class="xs muted">°</span>`
+    : `<label class="small">이 각도 이하까지 펴기 <input type="number" id="tgMax" value="${tg.max}" min="0" max="90"></label><span class="xs muted">°</span>`;
+};
+$('#btnTargetSave').onclick = () => {
+  const ex = exById(db.lastEx);
+  if (ex.t.type === 'flex') {
+    const lo = +$('#tgLo').value, hi = +$('#tgHi').value;
+    if (!(hi > lo)) return toast('최대 값이 최소보다 커야 해요.');
+    db.targets[ex.id] = { lo, hi };
+  } else db.targets[ex.id] = { max: +$('#tgMax').value };
+  save(); $('#targetEdit').hidden = true; renderMeasure(); toast('목표를 저장했어요.');
+};
+$('#btnTargetReset').onclick = () => { delete db.targets[db.lastEx]; save(); $('#targetEdit').hidden = true; renderMeasure(); };
+function tickMeasure() {
+  updateGauge('L'); updateGauge('R');
+  const both = fresh('L') && fresh('R');
+  const db_ = $('#devBig');
+  if (both) {
+    const d = Math.abs(SIDE.L.angle - SIDE.R.angle), thr = db.settings.thr;
+    db_.textContent = `좌우 편차 ${fmt(d, 1)}°`;
+    db_.className = 'devbig pill ' + (d <= thr * 0.6 ? 'ok' : d <= thr ? 'warn' : 'bad');
+  } else { db_.textContent = fresh('L') || fresh('R') ? '한쪽만 연결됨' : '좌우 편차 --'; db_.className = 'devbig pill'; }
+  if (Sess.running) {
+    $('#rReps').textContent = Sess.reps.length;
+    $('#rTime').textContent = mmss((now() - Sess.t0) / 1000);
+    $('#rHit').textContent = Sess.tg && Sess.reps.length ? Math.round(Sess.reps.filter(r => r.verdict === 'in').length / Sess.reps.length * 100) + '%' : '--';
+  }
+}
+
+/* ================= 화면: 종목 ================= */
+let cat = '전체';
+function renderLibrary() {
+  $('#catChips').innerHTML = CATS.map(c => `<button class="chip ${c === cat ? 'active' : ''}" data-cat="${c}">${c === '즐겨찾기' ? '★ ' : ''}${c}</button>`).join('');
+  $$('[data-cat]').forEach(b => b.onclick = () => { cat = b.dataset.cat; renderLibrary(); });
+  const q = $('#exSearch').value.trim();
+  const list = EX.filter(e => (cat === '전체' || (cat === '즐겨찾기' ? db.favorites.includes(e.id) : e.cat === cat)) && (!q || (e.name + e.cat + e.joint).includes(q)));
+  $('#exList').innerHTML = list.map(e => {
+    const fav = db.favorites.includes(e.id);
+    return `<div class="exrow"><button style="all:unset;cursor:pointer" data-pick="${e.id}"><div class="t">${esc(e.name)}${e.id === db.lastEx ? ' <span class="pill ok">선택됨</span>' : ''}</div><div class="xs muted">${e.cat} · ${e.joint} · ${targetText(targetFor(e))}</div></button>
+      <button class="star ${fav ? 'on' : ''}" data-star="${e.id}" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
+      <button class="btn sm" data-pick="${e.id}">선택</button></div>`;
+  }).join('') || '<div class="small muted" style="padding:16px 4px">해당하는 종목이 없어요.</div>';
+  $$('[data-pick]').forEach(b => b.onclick = () => { selectEx(b.dataset.pick); go('measure'); });
+  $$('[data-star]').forEach(b => b.onclick = () => {
+    const id = b.dataset.star, i = db.favorites.indexOf(id);
+    i >= 0 ? db.favorites.splice(i, 1) : db.favorites.push(id); save(); renderLibrary();
+  });
+}
+$('#exSearch').oninput = renderLibrary;
+
+/* ================= 화면: 기록 ================= */
+let calMonth = new Date(); calMonth.setDate(1);
+let selDay = null;
+const FREE_DAYS = 30;
+const visible = s => isPro() || s.date >= startOfDay(Date.now()) - (FREE_DAYS - 1) * DAY;
+function renderHistory() {
+  $('#planPill').textContent = isPro() ? 'Pro 체험' : '무료 플랜 · 최근 30일';
+  $('#planPill').className = 'pill ' + (isPro() ? 'ok' : '');
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  $('#calTitle').textContent = `${y}년 ${m + 1}월`;
+  const first = new Date(y, m, 1).getDay(), n = new Date(y, m + 1, 0).getDate();
+  const counts = {}; db.sessions.forEach(s => { const k = dayKey(s.date); counts[k] = (counts[k] || 0) + 1; });
+  const todayK = dayKey(Date.now()), limit = startOfDay(Date.now()) - (FREE_DAYS - 1) * DAY;
+  let html = '일월화수목금토'.split('').map(c => `<div class="dow">${c}</div>`).join('');
+  for (let i = 0; i < first; i++) html += '<button disabled></button>';
+  for (let d = 1; d <= n; d++) {
+    const ms = +new Date(y, m, d), k = dayKey(ms);
+    const cls = [counts[k] ? 'has' : '', k === todayK ? 'today' : '', k === selDay ? 'sel' : '', !isPro() && ms < limit ? 'locked' : ''].join(' ');
+    html += `<button class="${cls}" data-day="${k}" aria-label="${m + 1}월 ${d}일${counts[k] ? `, 세션 ${counts[k]}개` : ''}">${d}</button>`;
+  }
+  $('#cal').innerHTML = html;
+  $$('[data-day]').forEach(b => b.onclick = () => { selDay = selDay === b.dataset.day ? null : b.dataset.day; renderHistory(); });
+  let list, title;
+  if (selDay) {
+    const [yy, mm, dd] = selDay.split('-').map(Number);
+    title = `${mm}월 ${dd}일`;
+    list = db.sessions.filter(s => dayKey(s.date) === selDay);
+  } else { title = isPro() ? '전체 기록' : '최근 30일'; list = db.sessions.slice(); }
+  const shown = list.filter(visible).reverse(), hiddenN = list.length - list.filter(visible).length;
+  $('#dayTitle').textContent = title; $('#btnDayAll').hidden = !selDay;
+  $('#dayList').innerHTML = shown.map(sessCard).join('') +
+    (hiddenN ? `<div class="lock">🔒 <span>30일보다 오래된 세션 ${hiddenN}개는 Pro에서 볼 수 있어요.</span></div>` : '') +
+    (!shown.length && !hiddenN ? '<div class="small muted">이 기간에는 기록이 없어요.</div>' : '');
+  $$('#dayList [data-sess]').forEach(b => b.onclick = () => openSession(db.sessions.find(s => s.id === b.dataset.sess)));
+  renderPro();
+}
+$('#calPrev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderHistory(); };
+$('#calNext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderHistory(); };
+$('#btnDayAll').onclick = () => { selDay = null; renderHistory(); };
+
+// ---- Pro: 추이 · 위험도 · 자동 코멘트 ----
+let trendEx = null;
+function weekStats(list, fromMs, toMs) {
+  const ss = list.filter(s => s.date >= fromMs && s.date < toMs);
+  const avg = k => { const v = ss.map(k).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  return { n: ss.length, L: avg(s => s.L && s.L.peakAvg), R: avg(s => s.R && s.R.peakAvg), dev: avg(s => s.devAvg), over: avg(s => s.overPct) };
+}
+function renderPro() {
+  const card = $('#proCard');
+  if (db.sessions.length < 3 && !isPro()) { card.hidden = true; return; }
+  card.hidden = false;
+  if (!isPro()) {
+    card.innerHTML = `<h2>더 자세히 분석해드릴까요?</h2><p class="small muted" style="margin:0">기록이 ${db.sessions.length}개 쌓였어요. Pro에서는 주간 좌우 추이, 부상 위험도, 지난주 대비 코멘트를 볼 수 있어요.</p><button class="btn" id="btnTryPro">Pro 체험하기</button>`;
+    $('#btnTryPro').onclick = () => { db.settings.plan = 'pro'; save(); renderHistory(); };
+    return;
+  }
+  const exIds = [...new Set(db.sessions.map(s => s.ex))];
+  if (!exIds.length) { card.innerHTML = '<h2>추이 분석</h2><div class="small muted">기록이 쌓이면 여기에 좌우 추이가 표시돼요.</div>'; return; }
+  if (!exIds.includes(trendEx)) trendEx = exIds.includes(db.lastEx) ? db.lastEx : exIds[0];
+  const list = db.sessions.filter(s => s.ex === trendEx), t0 = startOfDay(Date.now()) + DAY;
+  const cur = weekStats(list, t0 - 7 * DAY, t0), prev = weekStats(list, t0 - 14 * DAY, t0 - 7 * DAY);
+  const all7 = weekStats(db.sessions, t0 - 7 * DAY, t0), thr = db.settings.thr;
+  let risk = null;
+  if (all7.n) risk = all7.dev > thr || all7.over > 30 ? ['bad', '위험'] : all7.dev > thr * 0.6 || all7.over > 10 ? ['warn', '주의'] : ['ok', '안전'];
+  const comments = [];
+  const pct = (a, b) => (a - b) / b * 100;
+  for (const [s, nm] of [['L', '왼쪽'], ['R', '오른쪽']]) {
+    if (cur[s] != null && prev[s] != null && prev[s] > 0) {
+      const p = pct(cur[s], prev[s]);
+      if (Math.abs(p) >= 2) comments.push(`지난주보다 ${nm} 평균 최대 각도가 ${fmt(Math.abs(p))}% ${p > 0 ? '늘었어요' : '줄었어요'} (${fmt(prev[s])}° → ${fmt(cur[s])}°).`);
+    }
+  }
+  if (cur.dev != null && prev.dev != null) comments.push(cur.dev < prev.dev ? `좌우 편차가 ${fmt(prev.dev, 1)}° → ${fmt(cur.dev, 1)}°로 줄었어요. 균형이 좋아지고 있어요.` : `좌우 편차가 ${fmt(prev.dev, 1)}° → ${fmt(cur.dev, 1)}°로 늘었어요. ${cur.L != null && cur.R != null ? (cur.L < cur.R ? '왼쪽' : '오른쪽') + '을 조금 더 신경 써보세요.' : ''}`);
+  if (!comments.length) comments.push(cur.n ? '비교할 지난주 기록이 아직 부족해요. 2주 이상 기록하면 변화 코멘트가 나와요.' : '이번 주 이 종목 기록이 없어요.');
+  card.innerHTML = `<div class="card-head"><h2>좌우 추이 · 최근 8주</h2><select id="trendSel">${exIds.map(id => `<option value="${id}" ${id === trendEx ? 'selected' : ''}>${esc(exById(id).name)}</option>`).join('')}</select></div>
+    <canvas id="trendChart" height="170"></canvas>
+    <div class="row xs"><span class="pill L">L 평균 최대 각도</span><span class="pill R">R 평균 최대 각도</span></div>
+    <div class="divider"></div>
+    <div class="risk"><span class="badge pill ${risk ? risk[0] : ''}">${risk ? risk[1] : '데이터 없음'}</span><div class="small">부상 위험도 (최근 7일)<div class="xs muted">평균 편차 ${fmt(all7.dev, 1)}° · 기준 초과 시간 ${fmt(all7.over)}% · 기준 ${thr}°</div></div></div>
+    <div class="divider"></div>
+    <div><div class="eyebrow">자동 코멘트 <span class="muted">(규칙 기반 · 2단계에서 AI로 교체)</span></div>${comments.map(c => `<p class="small" style="margin:6px 0 0">${esc(c)}</p>`).join('')}</div>`;
+  $('#trendSel').onchange = e => { trendEx = e.target.value; renderPro(); };
+  drawTrend(list, t0);
+}
+function drawTrend(list, t0) {
+  const f = fitCanvas($('#trendChart'), 170); if (!f) return;
+  const { ctx, w, h } = f;
+  const weeks = [...Array(8)].map((_, i) => weekStats(list, t0 - (8 - i) * 7 * DAY, t0 - (7 - i) * 7 * DAY));
+  const vals = weeks.flatMap(x => [x.L, x.R]).filter(v => v != null);
+  const lo = vals.length ? Math.floor((Math.min(...vals) - 10) / 10) * 10 : 0, hi = vals.length ? Math.ceil((Math.max(...vals) + 10) / 10) * 10 : 150;
+  const X = i => 40 + i * (w - 70) / 7, Y = v => h - 22 - (v - lo) / (hi - lo) * (h - 36);
+  ctx.clearRect(0, 0, w, h);
+  ctx.font = `11px ${cssVar('--num')}`; ctx.fillStyle = cssVar('--muted'); ctx.strokeStyle = cssVar('--line'); ctx.lineWidth = 1;
+  const step = (hi - lo) > 60 ? 30 : 10;
+  for (let v = lo; v <= hi; v += step) { ctx.beginPath(); ctx.moveTo(34, Y(v)); ctx.lineTo(w - 8, Y(v)); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(v + '°', 28, Y(v) + 4); }
+  ctx.textAlign = 'center';
+  weeks.forEach((_, i) => ctx.fillText(i === 7 ? '이번주' : `-${7 - i}주`, X(i), h - 6));
+  for (const s of ['L', 'R']) {
+    ctx.strokeStyle = ctx.fillStyle = cssVar('--' + s); ctx.lineWidth = 2.5; ctx.beginPath();
+    let started = false;
+    weeks.forEach((wk, i) => { if (wk[s] == null) return; started ? ctx.lineTo(X(i), Y(wk[s])) : ctx.moveTo(X(i), Y(wk[s])); started = true; });
+    ctx.stroke();
+    weeks.forEach((wk, i) => { if (wk[s] == null) return; ctx.beginPath(); ctx.arc(X(i), Y(wk[s]), i === 7 ? 5 : 3, 0, 7); ctx.fill(); });
+  }
+}
+
+/* ================= 세션 상세 시트 ================= */
+function openSession(s, justSaved) {
+  if (!s) return;
+  const tg = s.target, key = tg && tg.type === 'ext' ? 'Lmin' : 'L';
+  const stat = (k, v) => `<div class="card stat" style="padding:12px"><div class="eyebrow">${k}</div><div class="v num" style="font-size:22px">${v}</div></div>`;
+  const devCls = s.devMax == null ? '' : s.devMax <= s.thr ? 'ok' : 'bad';
+  const sideVal = side => s[side] ? (tg && tg.type === 'ext' ? s[side].lowAvg ?? s[side].min : s[side].peakAvg ?? s[side].max) : null;
+  $('#sheetBody').innerHTML = `<div class="grab"></div>
+    <div class="card-head"><div><div class="eyebrow">${justSaved ? '저장 완료 · ' : ''}${new Date(s.date).toLocaleString('ko-KR')}</div><h1 style="font-size:21px">${esc(s.name)}</h1></div><button class="btn sm" id="sheetClose">닫기</button></div>
+    <div class="grid2">
+      ${stat('반복', s.reps + '<small>회</small>')}
+      ${stat('운동 시간', mmss(s.dur))}
+      ${stat(tg && tg.type === 'ext' ? 'L 평균 최소 각도' : 'L 평균 최대 각도', `<span style="color:var(--L)">${fmt(sideVal('L'))}°</span>`)}
+      ${stat(tg && tg.type === 'ext' ? 'R 평균 최소 각도' : 'R 평균 최대 각도', `<span style="color:var(--R)">${fmt(sideVal('R'))}°</span>`)}
+      ${stat('최대 편차', `<span class="pill ${devCls}" style="font-size:18px">${fmt(s.devMax, 1)}°</span>`)}
+      ${stat('목표 달성', tg ? `${s.inTarget}/${s.reps}` : '--')}
+    </div>
+    <div class="small muted">평균 편차 ${fmt(s.devAvg, 1)}° · 기준(${s.thr}°) 초과 시간 ${fmt(s.overPct)}% · 경고 ${s.alerts}회 · 목표 ${targetText(tg)}${s.L ? ` · L 범위 ${fmt(s.L.min)}–${fmt(s.L.max)}°` : ''}${s.R ? ` · R 범위 ${fmt(s.R.min)}–${fmt(s.R.max)}°` : ''}</div>
+    ${s.series && s.series.length > 2 ? `<div class="card"><h2>좌우 각도 그래프</h2><canvas id="sessChart" height="190"></canvas><div class="row xs"><span class="pill L">L</span><span class="pill R">R</span><span class="pill ok">목표 범위</span></div></div>` : ''}
+    ${s.repList && s.repList.length ? `<div class="card"><h2>반복별 기록</h2><div class="tablewrap"><table><tr><th>#</th><th>L</th><th>R</th><th>편차</th><th>판정</th></tr>${s.repList.map((r, i) => {
+      const a = tg && tg.type === 'ext' ? r.Lmin : r.L, b = tg && tg.type === 'ext' ? r.Rmin : r.R;
+      return `<tr><td>${i + 1}</td><td class="num" style="color:var(--L)">${fmt(a)}°</td><td class="num" style="color:var(--R)">${fmt(b)}°</td><td class="num">${a != null && b != null ? fmt(Math.abs(a - b), 1) + '°' : '--'}</td><td>${{ in: '✓ 목표', short: '부족', over: '과굴곡', none: '-' }[r.v] || '-'}</td></tr>`;
+    }).join('')}</table></div></div>` : ''}
+    <div class="row"><button class="btn danger" id="sheetDel">이 기록 삭제</button></div>`;
+  $('#sheet').hidden = false;
+  $('#sheetClose').onclick = closeSheet;
+  $('#sheetDel').onclick = () => {
+    if (!confirm('이 세션 기록을 삭제할까요?')) return;
+    db.sessions = db.sessions.filter(x => x.id !== s.id); save(); closeSheet(); renderHome(); if (tab === 'history') renderHistory();
+  };
+  if (s.series && s.series.length > 2) requestAnimationFrame(() => drawSession(s));
+}
+function closeSheet() { $('#sheet').hidden = true; }
+$('#sheet').onclick = e => { if (e.target.id === 'sheet') closeSheet(); };
+function drawSession(s) {
+  const f = fitCanvas($('#sessChart'), 190); if (!f) return;
+  const { ctx, w, h } = f, pts = s.series, tg = s.target;
+  const vals = pts.flatMap(p => [p[1], p[2]]).filter(v => v != null).map(v => v / 10);
+  const lo = Math.min(0, ...vals) - 5, hi = Math.max(tg ? (tg.hi || 0) : 0, ...vals) + 10, tmax = pts[pts.length - 1][0] || 1;
+  const X = t => 34 + t / tmax * (w - 42), Y = v => h - 20 - (v - lo) / (hi - lo) * (h - 30);
+  ctx.clearRect(0, 0, w, h);
+  if (tg) {
+    ctx.fillStyle = cssVar('--ok-soft');
+    const a = tg.type === 'flex' ? tg.lo : lo, b = tg.type === 'flex' ? tg.hi : tg.max;
+    ctx.fillRect(34, Y(b), w - 42, Y(a) - Y(b));
+  }
+  ctx.font = `11px ${cssVar('--num')}`; ctx.fillStyle = cssVar('--muted'); ctx.strokeStyle = cssVar('--line'); ctx.lineWidth = 1; ctx.textAlign = 'right';
+  for (let v = Math.ceil(lo / 30) * 30; v <= hi; v += 30) { ctx.beginPath(); ctx.moveTo(34, Y(v)); ctx.lineTo(w - 8, Y(v)); ctx.stroke(); ctx.fillText(v + '°', 28, Y(v) + 4); }
+  ctx.textAlign = 'center'; ctx.fillText('0:00', 34, h - 5); ctx.fillText(mmss(tmax / 10), w - 20, h - 5);
+  for (const [i, side] of [[1, 'L'], [2, 'R']]) {
+    ctx.strokeStyle = cssVar('--' + side); ctx.lineWidth = 2; ctx.beginPath();
+    let pen = false;
+    for (const p of pts) { if (p[i] == null) { pen = false; continue; } const x = X(p[0]), y = Y(p[i] / 10); pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y); pen = true; }
+    ctx.stroke();
+  }
+}
+
+/* ================= 화면: 설정 ================= */
+function renderSettings() {
+  const st = db.settings;
+  $('#thr').value = st.thr; $('#thrV').textContent = st.thr;
+  $('#optVib').checked = st.vibrate; $('#optSound').checked = st.sound; $('#optVoice').checked = st.voice;
+  $('#optRemind').checked = st.remind; $('#remindAt').value = st.remindAt;
+  $$('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.t === st.theme));
+  $$('#planSeg button').forEach(b => b.classList.toggle('active', b.dataset.p === st.plan));
+  $('#bleNames').value = db.ble.names; $('#bleSvc').value = db.ble.svc; $('#bleChr').value = db.ble.chr; $('#bleBin').value = db.ble.bin;
+  renderDevices();
+}
+$('#thr').oninput = e => { db.settings.thr = +e.target.value; $('#thrV').textContent = e.target.value; save(); };
+$('#optVib').onchange = e => { db.settings.vibrate = e.target.checked; save(); buzz(80); };
+$('#optSound').onchange = e => { db.settings.sound = e.target.checked; save(); beep(); };
+$('#optVoice').onchange = e => { db.settings.voice = e.target.checked; save(); speak('음성 카운트를 켰어요'); };
+$('#optRemind').onchange = async e => {
+  db.settings.remind = e.target.checked; save();
+  if (e.target.checked && 'Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch (err) {} }
+  checkReminder();
+};
+$('#remindAt').onchange = e => { db.settings.remindAt = e.target.value || '20:00'; save(); checkReminder(); };
+$$('#themeSeg button').forEach(b => b.onclick = () => { db.settings.theme = b.dataset.t; save(); applyTheme(); renderSettings(); });
+$$('#planSeg button').forEach(b => b.onclick = () => { db.settings.plan = b.dataset.p; save(); renderSettings(); });
+function applyTheme() {
+  const t = db.settings.theme;
+  if (t === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+}
+$('#btnZero').onclick = () => {
+  const got = ['L', 'R'].filter(s => fresh(s));
+  if (!got.length) return toast('보호대 데이터가 없어요. 먼저 연결하세요.');
+  got.forEach(s => { db.calib[s].zero = SIDE[s].raw; SIDE[s].angle = null; });
+  save(); toast(`${got.join('·')} 영점을 맞췄어요.`);
+};
+$$('[data-flip]').forEach(b => b.onclick = () => { const s = b.dataset.flip; db.calib[s].dir *= -1; SIDE[s].angle = null; save(); toast(`${s} 방향을 반전했어요.`); });
+$('#btnBleSave').onclick = () => {
+  db.ble = { names: $('#bleNames').value.trim(), svc: $('#bleSvc').value.trim(), chr: $('#bleChr').value.trim(), bin: $('#bleBin').value };
+  save(); toast('저장했어요. UUID 변경은 다시 연결하면 적용돼요.');
+};
+$('#btnBleDefault').onclick = () => { db.ble = { ...DEFAULT_BLE }; save(); renderSettings(); };
+$('#btnCsv').onclick = () => {
+  const head = 'date,exercise,category,duration_s,reps,target,L_peak_avg,R_peak_avg,L_min,L_max,R_min,R_max,dev_avg,dev_max,over_pct,alerts,in_target';
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = db.sessions.map(s => [new Date(s.date).toISOString(), s.name, s.cat, s.dur, s.reps, targetText(s.target), s.L?.peakAvg, s.R?.peakAvg, s.L?.min, s.L?.max, s.R?.min, s.R?.max, s.devAvg, s.devMax, s.overPct, s.alerts, s.inTarget].map(q).join(','));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + head + '\n' + rows.join('\n')], { type: 'text/csv' }));
+  a.download = `angbrace-${dayKey(Date.now())}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('#btnReset').onclick = () => {
+  if (!confirm('모든 측정 기록을 삭제할까요? 되돌릴 수 없어요.')) return;
+  db.sessions = []; save(); toast('기록을 모두 삭제했어요.'); renderHome();
+};
+
+/* ================= 리마인더 ================= */
+function checkReminder() {
+  const st = db.settings, today = dayKey(Date.now());
+  const done = db.sessions.some(s => dayKey(s.date) === today);
+  const [h, m] = (st.remindAt || '20:00').split(':').map(Number), d = new Date();
+  const due = st.remind && !done && d.getHours() * 60 + d.getMinutes() >= h * 60 + m;
+  $('#remindBanner').hidden = !due;
+  if (due && db.remindedOn !== today) {
+    db.remindedOn = today; save();
+    if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
+      navigator.serviceWorker.ready.then(r => r.showNotification('AngBrace', { body: '오늘 아직 측정하지 않았어요. 1분이면 끝나요!', icon: 'icon-192.png', tag: 'remind' })).catch(() => {});
+    }
+  }
+}
+setInterval(checkReminder, 60000);
+
+/* ================= 루프 & 시작 ================= */
+function loop() {
+  if (tab === 'measure') tickMeasure();
+  if (tab === 'settings') {
+    $('#calL').textContent = fresh('L') ? fmt(SIDE.L.angle, 1) + '°' : '--';
+    $('#calR').textContent = fresh('R') ? fmt(SIDE.R.angle, 1) + '°' : '--';
+    $('#lastPkt').textContent = lastPacket || '--';
+  }
+  requestAnimationFrame(loop);
+}
+buildGauge('L'); buildGauge('R');
+applyTheme();
+renderDevices();
+renderHome();
+requestAnimationFrame(loop);
+window.addEventListener('resize', () => { if (tab === 'home') drawWeek(); if (tab === 'history') renderPro(); });
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
