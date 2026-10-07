@@ -1,5 +1,5 @@
 // 오프라인에서도 앱이 열리도록 파일을 캐시한다. 앱을 고치면 VERSION을 올릴 것.
-const VERSION = 'angbrace-v1';
+const VERSION = 'angbrace-v2-zero';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

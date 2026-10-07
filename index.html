@@ -239,6 +239,13 @@ code{font-family:var(--num);font-size:12px;word-break:break-all}
     <div class="gauge L" id="gaugeL"></div>
     <div class="gauge R" id="gaugeR"></div>
   </div>
+  <div class="card">
+    <div class="card-head"><h2>영점 맞추기</h2><span class="pill" data-cal-mode></span></div>
+    <div class="small muted">관절을 편 기준 자세에서 잠시 멈춘 뒤 눌러주세요. 연결된 쪽을 각각 0°로 맞춥니다.</div>
+    <div class="row"><button class="btn" data-zero="LR">현재 자세를 0°로</button><button class="btn sm" data-zero="L">왼쪽만</button><button class="btn sm" data-zero="R">오른쪽만</button></div>
+    <div class="xs muted" data-cal-status role="status" aria-live="polite"></div>
+    <button class="btn sm ghost" id="btnCalSettings">원본 각도 · 영점 설정 보기</button>
+  </div>
   <div class="devrow">
     <span class="devbig pill" id="devBig">좌우 편차 --</span>
     <span class="xs muted">경고 기준 <b id="thrLabel">5</b>°</span>
@@ -302,10 +309,15 @@ code{font-family:var(--num);font-size:12px;word-break:break-all}
     <div class="switch"><span class="small">시뮬레이션 모드 <span class="xs muted">(보호대 없이 테스트)</span></span><input type="checkbox" id="simOn"></div>
   </div>
   <div class="card">
-    <h2>영점 맞추기</h2>
-    <p class="small muted" style="margin:0">관절을 곧게 편 자세에서 누르면 그 자세가 양쪽 0°가 됩니다. 굽혔을 때 숫자가 −로 나오면 방향 반전을 누르세요.</p>
-    <div class="row"><span class="pill L">L <span class="num" id="calL">--</span></span><span class="pill R">R <span class="num" id="calR">--</span></span></div>
-    <div class="row"><button class="btn" id="btnZero">지금 자세를 0°로</button><button class="btn sm" data-flip="L">L 방향 반전</button><button class="btn sm" data-flip="R">R 방향 반전</button></div>
+    <div class="card-head"><h2>영점 맞추기</h2><span class="pill" data-cal-mode></span></div>
+    <p class="small muted" style="margin:0">관절을 편 기준 자세를 0°로 저장합니다. 원본은 센서가 보내는 값이며, 보정 각도는 이 기준에서 움직인 각도입니다. 굽힐 때 음수가 나오면 해당 쪽의 방향을 반전하세요.</p>
+    <div class="grid2">
+      <div><span class="pill L">왼쪽 L</span><div class="small">보정 <b class="num" id="calL">--</b></div><div class="xs muted">원본 <span class="num" id="rawL">--</span></div><div class="xs muted">영점 <span class="num" id="zeroL">--</span></div><div class="xs muted" id="zeroTimeL"></div></div>
+      <div><span class="pill R">오른쪽 R</span><div class="small">보정 <b class="num" id="calR">--</b></div><div class="xs muted">원본 <span class="num" id="rawR">--</span></div><div class="xs muted">영점 <span class="num" id="zeroR">--</span></div><div class="xs muted" id="zeroTimeR"></div></div>
+    </div>
+    <div class="row"><button class="btn" id="btnZero" data-zero="LR">현재 자세를 0°로</button><button class="btn sm" data-zero="L">왼쪽만</button><button class="btn sm" data-zero="R">오른쪽만</button></div>
+    <div class="row"><button class="btn sm" data-flip="L">L 방향 반전</button><button class="btn sm" data-flip="R">R 방향 반전</button><button class="btn sm ghost" id="btnZeroReset">영점 초기화</button></div>
+    <div class="xs muted" data-cal-status role="status" aria-live="polite"></div>
   </div>
   <div class="card">
     <h2>비대칭 경고</h2>
@@ -459,7 +471,7 @@ const SIDE = { L: { raw: null, angle: null, t: 0, cnt: 0, hz: 0 }, R: { raw: nul
 const fresh = s => SIDE[s].angle != null && now() - SIDE[s].t < 1000;
 function setSide(s, raw) {
   if (raw == null || !isFinite(raw)) return;
-  const c = db.calib[s], S = SIDE[s];
+  const c = calibration()[s], S = SIDE[s];
   const a = c.dir * wrap180(raw - c.zero);
   S.angle = (S.angle == null || now() - S.t > 1000) ? a : S.angle + 0.4 * (a - S.angle);
   S.raw = raw; S.t = now(); S.cnt++;
@@ -474,6 +486,7 @@ function toUuid(s) {
   return /^[0-9a-f]{4}$/.test(s) ? parseInt(s, 16) : s;
 }
 async function connectDevice(side) {
+  if (sim.on) return toast('시뮬레이션을 끈 뒤 보호대를 연결해주세요.');
   if (!navigator.bluetooth) return toast('이 브라우저는 블루투스 연결을 지원하지 않아요. 안드로이드나 PC의 Chrome에서 열어주세요.', 4000);
   if (!db.ble.svc) return toast('설정 > 통신 설정에서 Service UUID를 입력하세요.');
   const svc = toUuid(db.ble.svc);
@@ -557,6 +570,7 @@ function applyValues(d, v) {
 }
 let lastPacket = '';
 function onPacket(d, dv) {
+  if (sim.on) return;
   const bytes = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
   const isText = bytes.length > 0 && bytes.every(b => b === 10 || b === 13 || (b >= 32 && b < 127));
   lastPacket = `${d.name}: ${[...bytes].map(b => b.toString(16).padStart(2, '0')).join(' ')}${isText ? `  "${dec.decode(bytes).trim()}"` : ''}`;
@@ -575,9 +589,13 @@ function onPacket(d, dv) {
 }
 
 /* ================= 시뮬레이션 ================= */
+const simCalib = { L: { zero: 0, dir: 1 }, R: { zero: 0, dir: 1 } };
 const sim = { on: false, timer: null, mode: 'auto', cur: 0, k: -1, depth: 1 };
 function setSim(on) {
+  if (Sess.running) { $('#simOn').checked = sim.on; return toast('측정을 종료한 뒤 모드를 바꿔주세요.'); }
+  if (on && devices.some(d => d.dev.gatt.connected)) { $('#simOn').checked = sim.on; return toast('보호대 연결을 해제한 뒤 시뮬레이션을 켜주세요.'); }
   sim.on = on; clearInterval(sim.timer);
+  for (const s of ['L', 'R']) Object.assign(SIDE[s], { raw: null, angle: null, t: 0 });
   if (on) sim.timer = setInterval(simTick, 40);
   $('#simOn').checked = on; $('#simDock').hidden = !on;
   renderDevices();
@@ -595,8 +613,8 @@ function simTick() {
   sim.cur += (target - sim.cur) * 0.3;
   const asym = +$('#simAsym').value, n = () => (Math.random() - 0.5) * 0.8;
   const L = sim.cur + n(), R = sim.cur - asym * clamp(sim.cur / Math.max(30, peakGoal), 0, 1.2) + n();
-  // 보정값과 무관하게 슬라이더 각도가 그대로 나오는 가상 보호대
-  for (const [s, a] of [['L', L], ['R', R]]) { const c = db.calib[s]; setSide(s, c.zero + c.dir * a); }
+  // 가상 원본에도 실제 센서와 동일한 영점 보정을 적용한다.
+  for (const [s, a] of [['L', L], ['R', R]]) setSide(s, a);
 }
 $$('#simMode button').forEach(b => b.onclick = () => {
   sim.mode = b.dataset.m; $$('#simMode button').forEach(x => x.classList.toggle('active', x === b));
@@ -1175,13 +1193,59 @@ function applyTheme() {
   const t = db.settings.theme;
   if (t === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
 }
-$('#btnZero').onclick = () => {
+function calibration() { return sim.on ? simCalib : db.calib; }
+function refreshCalibratedAngle(s) {
+  const c = calibration()[s];
+  if (fresh(s)) SIDE[s].angle = c.dir * wrap180(SIDE[s].raw - c.zero);
+  else SIDE[s].angle = null;
+}
+function zeroCalibration(which) {
+  if (Sess.running) return toast('측정을 종료한 뒤 영점을 맞춰주세요.');
+  const sides = (which === 'LR' ? ['L', 'R'] : [which]).filter(s => fresh(s));
+  if (!sides.length) return toast('새로운 보호대 데이터가 없어요. 연결 상태를 확인해주세요.');
+  for (const s of sides) {
+    Object.assign(calibration()[s], { zero: SIDE[s].raw, at: Date.now() });
+    SIDE[s].angle = 0;
+  }
+  if (!sim.on) save();
+  renderCalibration();
+  toast(sides.map(s => s === 'L' ? '왼쪽' : '오른쪽').join('·') + ' 영점을 0°로 맞췄어요.');
+}
+function renderCalibration() {
   const got = ['L', 'R'].filter(s => fresh(s));
-  if (!got.length) return toast('보호대 데이터가 없어요. 먼저 연결하세요.');
-  got.forEach(s => { db.calib[s].zero = SIDE[s].raw; SIDE[s].angle = null; });
-  save(); toast(`${got.join('·')} 영점을 맞췄어요.`);
+  $$('[data-cal-mode]').forEach(el => el.textContent = sim.on ? '시뮬레이션 · 임시 보정' : '보호대 · 브라우저 저장');
+  const status = Sess.running
+    ? '기록 중에는 영점과 방향을 바꿀 수 없어요. 측정을 종료한 뒤 설정해주세요.'
+    : got.length ? (got.length === 2 ? '양쪽 데이터 수신 중' : (got[0] === 'L' ? '왼쪽' : '오른쪽') + '만 수신 중 · 연결된 쪽만 보정합니다.') : '데이터 대기 중 · 보호대를 연결해주세요.';
+  $$('[data-cal-status]').forEach(el => { if (el.textContent !== status) el.textContent = status; });
+  $$('[data-zero]').forEach(el => el.disabled = Sess.running || !(el.dataset.zero === 'LR' ? got.length : got.includes(el.dataset.zero)));
+  $$('[data-flip]').forEach(el => el.disabled = Sess.running);
+  $('#btnZeroReset').disabled = Sess.running;
+  for (const s of ['L', 'R']) {
+    const c = calibration()[s];
+    $('#cal' + s).textContent = fresh(s) ? fmt(SIDE[s].angle, 1) + '°' : '--';
+    $('#raw' + s).textContent = fresh(s) ? fmt(SIDE[s].raw, 1) + '°' : '--';
+    $('#zero' + s).textContent = fmt(c.zero, 1) + '° · ' + (c.dir === 1 ? '정방향' : '반전');
+    $('#zeroTime' + s).textContent = c.at ? '보정 ' + new Date(c.at).toLocaleString('ko-KR') : c.zero !== 0 ? '기존 보정값 적용 중' : '기본 영점';
+  }
+}
+$$('[data-zero]').forEach(b => b.onclick = () => zeroCalibration(b.dataset.zero));
+$('#btnCalSettings').onclick = () => { go('settings'); $('#btnZero').scrollIntoView({ block: 'center' }); };
+$$('[data-flip]').forEach(b => b.onclick = () => {
+  if (Sess.running) return toast('측정을 종료한 뒤 방향을 바꿔주세요.');
+  const s = b.dataset.flip;
+  calibration()[s].dir *= -1;
+  refreshCalibratedAngle(s);
+  if (!sim.on) save();
+  renderCalibration(); toast(s + ' 방향을 반전했어요.');
+});
+$('#btnZeroReset').onclick = () => {
+  if (Sess.running) return toast('측정을 종료한 뒤 영점을 초기화해주세요.');
+  if (!confirm('양쪽 영점과 방향을 기본값으로 되돌릴까요? 측정 기록은 유지됩니다.')) return;
+  for (const s of ['L', 'R']) { Object.assign(calibration()[s], { zero: 0, dir: 1, at: null }); refreshCalibratedAngle(s); }
+  if (!sim.on) save();
+  renderCalibration(); toast('양쪽 영점과 방향을 초기화했어요.');
 };
-$$('[data-flip]').forEach(b => b.onclick = () => { const s = b.dataset.flip; db.calib[s].dir *= -1; SIDE[s].angle = null; save(); toast(`${s} 방향을 반전했어요.`); });
 $('#btnBleSave').onclick = () => {
   db.ble = { names: $('#bleNames').value.trim(), svc: $('#bleSvc').value.trim(), chr: $('#bleChr').value.trim(), bin: $('#bleBin').value };
   save(); toast('저장했어요. UUID 변경은 다시 연결하면 적용돼요.');
@@ -1218,11 +1282,13 @@ function checkReminder() {
 setInterval(checkReminder, 60000);
 
 /* ================= 루프 & 시작 ================= */
+let lastCalibrationRender = -Infinity;
 function loop() {
   if (tab === 'measure') tickMeasure();
+  if ((tab === 'measure' || tab === 'settings') && now() - lastCalibrationRender >= 150) {
+    renderCalibration(); lastCalibrationRender = now();
+  }
   if (tab === 'settings') {
-    $('#calL').textContent = fresh('L') ? fmt(SIDE.L.angle, 1) + '°' : '--';
-    $('#calR').textContent = fresh('R') ? fmt(SIDE.R.angle, 1) + '°' : '--';
     $('#lastPkt').textContent = lastPacket || '--';
   }
   requestAnimationFrame(loop);
