@@ -174,6 +174,14 @@ th{color:var(--muted);font-weight:600;font-size:12px}
 .tablewrap{overflow-x:auto}
 code{font-family:var(--num);font-size:12px;word-break:break-all}
 @media (max-width:380px){.gauge .ang{font-size:32px}.runstats .v{font-size:24px}}
+
+/* 게임 */
+.gwrap{position:relative;border-radius:22px;overflow:hidden;background:#0b1530;box-shadow:var(--shadow)}
+.gwrap canvas{display:block;width:100%}
+.ghud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.ghud .v{font-family:var(--num);font-size:28px;font-weight:600;line-height:1.1}
+.ghud .k{font-size:12px;color:var(--muted)}
+.gstart{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);border:0;border-radius:99px;padding:14px 26px;font-weight:700;font-size:16px;background:#ffb020;color:#1a1300;box-shadow:0 6px 20px rgba(255,176,32,.35)}
 </style>
 </head>
 <body>
@@ -353,7 +361,22 @@ code{font-family:var(--num);font-size:12px;word-break:break-all}
   <div class="card">
     <h2>데이터</h2>
     <div class="row"><button class="btn" id="btnCsv">CSV 내보내기</button><button class="btn danger" id="btnReset">모든 기록 삭제</button></div>
-    <p class="xs muted" style="margin:0">기록은 이 휴대폰의 이 브라우저에만 저장됩니다. AngBrace 웹앱 v0.1 (MVP)</p>
+    <p class="xs muted" style="margin:0">기록은 이 휴대폰의 이 브라우저에만 저장됩니다. AngBrace 웹앱 v2.0</p>
+  </div>
+</section>
+
+<!-- ================= 게임 (2세대) ================= -->
+<section class="scr" id="scr-game">
+  <div>
+    <div class="eyebrow">AngBrace PLAY</div>
+    <h1>밸런스 로켓</h1>
+    <p class="xs muted" style="margin:4px 0 0">양쪽 무릎을 같은 각도로 깊게 앉을수록 로켓이 더 높이 날아가요.</p>
+  </div>
+  <div class="gwrap"><canvas id="gcv"></canvas><button class="gstart" id="gStart">게임 시작</button></div>
+  <div class="card ghud">
+    <div><div class="v" id="gScore">0</div><div class="k">점수</div></div>
+    <div><div class="v" id="gCombo">0</div><div class="k">콤보</div></div>
+    <div><div class="v" id="gPerf">0</div><div class="k">PERFECT</div></div>
   </div>
 </section>
 </main>
@@ -361,7 +384,7 @@ code{font-family:var(--num);font-size:12px;word-break:break-all}
 <nav class="tabbar"><div class="inner">
   <button data-tab="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg>홈</button>
   <button data-tab="measure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg>측정<span class="rec" id="recDot" hidden></span></button>
-  <button data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h9"/></svg>종목</button>
+  <button data-tab="game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor"/><circle cx="18" cy="13.5" r="1" fill="currentColor"/></svg>게임</button>
   <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>기록</button>
   <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>설정</button>
 </div></nav>
@@ -1300,6 +1323,106 @@ renderHome();
 requestAnimationFrame(loop);
 window.addEventListener('resize', () => { if (tab === 'home') drawWeek(); if (tab === 'history') renderPro(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
+/* ================= 게임: 밸런스 로켓 (2세대) ================= */
+const G = { on: false, score: 0, combo: 0, perf: 0, alt: 0, vel: 0, phase: 'up', peak: 0, maxDiff: 0, pops: [], stars: [], wob: 0, tilt: 0, last: 0, flame: 0 };
+const gcv = $('#gcv'), gctx = gcv.getContext('2d');
+function gSize() {
+  const w = gcv.clientWidth || 380, h = Math.round(w * 1.18), d = devicePixelRatio || 1;
+  if (gcv.width !== Math.round(w * d)) { gcv.width = Math.round(w * d); gcv.height = Math.round(h * d); gcv.style.height = h + 'px'; }
+  return { w, h, d };
+}
+for (let i = 0; i < 70; i++) G.stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.6 + 0.4, s: Math.random() * 0.6 + 0.4 });
+function gPop(text, col, big) { G.pops.push({ text, col, big, t: now() }); }
+function gStartGame() {
+  Object.assign(G, { on: true, score: 0, combo: 0, perf: 0, alt: 0, vel: 0, phase: 'up', peak: 0, maxDiff: 0, pops: [] });
+  $('#gStart').hidden = true; gHud(); gPop('스쿼트로 출발!', '#ffffff', true); beep(660, 120);
+}
+$('#gStart').onclick = gStartGame;
+function gHud() { $('#gScore').textContent = G.score.toLocaleString(); $('#gCombo').textContent = G.combo; $('#gPerf').textContent = G.perf; }
+function gRep(peak, md) {
+  if (peak >= 85 && md <= 5) {
+    G.combo++; G.perf++; const pt = 100 * G.combo; G.score += pt; G.vel += 26 + G.combo * 6;
+    gPop('PERFECT +' + pt, '#ffd54a', true); beep(1046, 90); setTimeout(() => beep(1568, 120), 90);
+  } else if (peak >= 85) {
+    G.combo = 0; G.score += 20; G.wob = 1; G.vel += 6;
+    gPop('기울었어요! 좌우 ' + md.toFixed(0) + '°', '#ff7a6b', true); beep(330, 200); buzz(120);
+  } else { G.combo = 0; G.score += 10; gPop('조금 더 깊게', '#9fc3ff', false); }
+  gHud();
+}
+function gTick(t) {
+  requestAnimationFrame(gTick);
+  if (tab !== 'game') return;
+  const { w, h, d } = gSize(), c = gctx, dt = Math.min(0.05, (t - (G.last || t)) / 1000); G.last = t;
+  // 한쪽만 연결돼도 깊이로 플레이할 수 있게 (균형 판정은 양쪽이 모두 있을 때만)
+  const L = fresh('L') ? SIDE.L.angle : null, R = fresh('R') ? SIDE.R.angle : null;
+  const both = L != null && R != null, ok = L != null || R != null;
+  const avg = both ? (L + R) / 2 : (L != null ? L : R != null ? R : 0), diff = both ? L - R : 0;
+  if (G.on && ok) {
+    if (G.phase === 'up' && avg > 60) { G.phase = 'down'; G.peak = avg; G.maxDiff = Math.abs(diff); }
+    else if (G.phase === 'down') {
+      G.peak = Math.max(G.peak, avg); if (avg > 60) G.maxDiff = Math.max(G.maxDiff, Math.abs(diff));
+      if (avg < 30) { G.phase = 'up'; gRep(G.peak, G.maxDiff); }
+    }
+  }
+  G.alt += G.vel * dt * 10; G.vel *= Math.pow(0.55, dt); G.flame += dt;
+  G.tilt += ((ok ? clamp(diff * 1.6, -30, 30) : 0) - G.tilt) * Math.min(1, dt * 8);
+  G.wob = Math.max(0, G.wob - dt * 0.9);
+  c.setTransform(d, 0, 0, d, 0, 0);
+  // 하늘
+  const sky = c.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, '#060b1f'); sky.addColorStop(0.6, '#13235a'); sky.addColorStop(1, '#2d3f8f');
+  c.fillStyle = sky; c.fillRect(0, 0, w, h);
+  const sp = 0.03 + G.vel * 0.004;
+  for (const st of G.stars) {
+    st.y += sp * st.s * dt * 4; if (st.y > 1) { st.y -= 1; st.x = Math.random(); }
+    c.globalAlpha = 0.5 + 0.5 * st.s; c.fillStyle = '#fff';
+    c.fillRect(st.x * w, st.y * h, st.r, st.r * (1 + G.vel * 0.04));
+  }
+  c.globalAlpha = 1;
+  // 행성
+  c.fillStyle = 'rgba(120,150,255,.18)'; c.beginPath(); c.arc(w * 0.85, h * 0.18, 34, 0, 7); c.fill();
+  // 깊이 게이지 (왼쪽)
+  const gx = 18, gy = 70, gh = h - 190;
+  c.fillStyle = 'rgba(255,255,255,.12)'; c.beginPath(); c.roundRect(gx, gy, 12, gh, 6); c.fill();
+  const yOf = a => gy + gh - clamp(a / 120, 0, 1) * gh;
+  c.fillStyle = 'rgba(47,207,140,.45)'; c.fillRect(gx, yOf(110), 12, yOf(90) - yOf(110));
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(gx + 6, yOf(avg), 9, 0, 7); c.fill();
+  c.font = '600 11px ' + getComputedStyle(document.body).fontFamily; c.fillStyle = 'rgba(255,255,255,.7)'; c.fillText('깊이', gx - 2, gy - 10);
+  c.fillStyle = '#2fcf8c'; c.fillText('목표', gx + 18, yOf(100) + 4);
+  // 로켓
+  const rx = w / 2 + G.tilt * 1.6 + Math.sin(t / 60) * 6 * G.wob, ry = h * 0.52 - Math.min(60, G.vel * 0.8);
+  c.save(); c.translate(rx, ry); c.rotate((G.tilt + Math.sin(t / 50) * 14 * G.wob) * Math.PI / 180);
+  const fl = 26 + G.vel * 0.9 + Math.sin(G.flame * 40) * 5;
+  const fg = c.createLinearGradient(0, 30, 0, 30 + fl); fg.addColorStop(0, '#fff3b0'); fg.addColorStop(0.4, '#ffb020'); fg.addColorStop(1, 'rgba(255,80,40,0)');
+  c.fillStyle = fg; c.beginPath(); c.moveTo(-11, 30); c.quadraticCurveTo(0, 30 + fl * 1.2, 11, 30); c.fill();
+  c.fillStyle = '#e8edf7'; c.beginPath(); c.moveTo(0, -46); c.bezierCurveTo(22, -24, 18, 20, 14, 32); c.lineTo(-14, 32); c.bezierCurveTo(-18, 20, -22, -24, 0, -46); c.fill();
+  c.fillStyle = '#2771d6'; c.beginPath(); c.moveTo(-14, 10); c.lineTo(-28, 34); c.lineTo(-13, 30); c.fill();
+  c.fillStyle = '#e2582f'; c.beginPath(); c.moveTo(14, 10); c.lineTo(28, 34); c.lineTo(13, 30); c.fill();
+  c.fillStyle = '#0f1b2d'; c.beginPath(); c.arc(0, -10, 8, 0, 7); c.fill(); c.fillStyle = '#7fb2ff'; c.beginPath(); c.arc(0, -10, 5, 0, 7); c.fill();
+  c.restore();
+  // 고도
+  c.textAlign = 'center'; c.fillStyle = '#fff'; c.font = '600 30px ' + getComputedStyle(document.body).getPropertyValue('--num');
+  c.fillText(Math.round(G.alt).toLocaleString() + ' m', w / 2, 46);
+  c.font = '500 12px sans-serif'; c.fillStyle = 'rgba(255,255,255,.6)'; c.fillText('고도', w / 2, 64);
+  // 좌우 균형 바
+  const by = h - 92, bw = w - 80, bx = 40;
+  c.fillStyle = 'rgba(255,255,255,.12)'; c.beginPath(); c.roundRect(bx, by, bw, 12, 6); c.fill();
+  c.fillStyle = 'rgba(47,207,140,.5)'; c.fillRect(w / 2 - bw * 5 / 40, by, bw * 10 / 40, 12);
+  const mx = w / 2 + clamp(diff / 20, -1, 1) * bw / 2, bad = Math.abs(diff) > 5;
+  c.fillStyle = bad ? '#ff6b6b' : '#ffffff'; c.beginPath(); c.arc(mx, by + 6, 10, 0, 7); c.fill();
+  c.font = '700 12px sans-serif'; c.fillStyle = '#5b9dff'; c.textAlign = 'left'; c.fillText('L ' + (L != null ? L.toFixed(0) : '--') + '°', bx, by - 10);
+  c.fillStyle = '#ff7d58'; c.textAlign = 'right'; c.fillText((R != null ? R.toFixed(0) : '--') + '° R', bx + bw, by - 10);
+  c.textAlign = 'center'; c.fillStyle = bad ? '#ff8a80' : 'rgba(255,255,255,.75)'; c.fillText(!ok ? '보호대를 연결해주세요' : !both ? '한쪽만 연결됨' : bad ? '균형을 맞춰요!' : '좌우 균형', w / 2, by - 10);
+  // 팝업
+  G.pops = G.pops.filter(p => now() - p.t < 1500);
+  for (const p of G.pops) {
+    const k = (now() - p.t) / 1500;
+    c.globalAlpha = 1 - k * k; c.fillStyle = p.col; c.font = '800 ' + (p.big ? 30 : 22) + 'px sans-serif';
+    c.fillText(p.text, w / 2, h * 0.3 - k * 40);
+  }
+  c.globalAlpha = 1; c.textAlign = 'left';
+}
+requestAnimationFrame(gTick);
 </script>
 </body>
 </html>
